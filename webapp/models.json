@@ -1,0 +1,9 @@
+{
+  "connemara_his": {
+    "id": "connemara_his", 
+    "name": "Galway Bay",
+    "defaults": {
+         "latitude": 53.256302, "longitude": -9.005189
+    }
+  }
+}

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<title>Project Status...</title>
+<head>
+<meta charset="utf-8">
+<script src="/static/js/jquery.min.js"></script>
+<link rel="stylesheet" href="/static/css/bootstrap.min.css">
+<link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
+<script src="/static/js/bootstrap.min.js"></script>
+<style>
+
+path {
+  fill-rule: evenodd;
+  stroke: #333;
+  stroke-width: 2px;
+}
+
+.sun path {
+  fill: #6baed6;
+}
+
+.planet path {
+  fill: #9ecae1;
+}
+
+.annulus path {
+  fill: #c6dbef;
+}
+
+</style>
+<script>
+var get_status_update = function(){
+  $.ajax("status.json",{
+     dataType: "json",
+     cache: false,
+     success: function(data){
+       if(data == "Finished"){
+         document.location.href = document.location.href+"project";
+       }else if(data.startsWith("Project failed:")){
+         $("#header").text("This project failed.");
+         $("#animation").hide();
+         $.ajax("log.txt", {
+           dataType: "text",
+           success: function(logs){
+             $("#logs").text(logs);
+             $("#failed_message").show();
+           }
+         });
+       }else{
+         $("#header").text("Building project...");
+         $("#status").text(data);
+         $("#animation").show();
+         setTimeout(get_status_update,100);
+       }
+     }
+   });
+}
+$(document).ready(function(){
+   setTimeout(get_status_update,500);
+});
+</script>
+</head>
+<body>
+<div class="container">
+<h1><a href="/">ADRIFT</a></h1>
+<p class="lead">Welcome to the <a href="http://www.marine.ie/">Marine Institute</a> application for Advanced Data Representation Indicating Flow Trajectory (ADRIFT)</p> 
+<h3 id="header">Checking Project Status</h3>
+<div id="status"></div>
+<div id="failed_message" style="display:none">
+<p class="lead">Please review the log messages below to determine what went wrong.</p>
+<pre id="logs"></pre>
+</div>
+
+<div style="display:none">
+<form>
+  <input type="radio" name="reference" id="ref-annulus">
+  <label for="ref-annulus">Annulus</label><br>
+  <input type="radio" name="reference" id="ref-planet" checked>
+  <label for="ref-planet">Planets</label><br>
+  <input type="radio" name="reference" id="ref-sun">
+  <label for="ref-sun">Sun</label>
+</form>
+</div>
+<div id="animation" style="display:none">
+
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var width = 960,
+    height = 500,
+    radius = 80,
+    x = Math.sin(2 * Math.PI / 3),
+    y = Math.cos(2 * Math.PI / 3);
+
+var offset = 0,
+    speed = 4,
+    start = Date.now();
+
+var svg = d3.select("#animation").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(.55)")
+  .append("g");
+
+var frame = svg.append("g")
+    .datum({radius: Infinity});
+
+frame.append("g")
+    .attr("class", "annulus")
+    .datum({teeth: 80, radius: -radius * 5, annulus: true})
+  .append("path")
+    .attr("d", gear);
+
+frame.append("g")
+    .attr("class", "sun")
+    .datum({teeth: 16, radius: radius})
+  .append("path")
+    .attr("d", gear);
+
+frame.append("g")
+    .attr("class", "planet")
+    .attr("transform", "translate(0,-" + radius * 3 + ")")
+    .datum({teeth: 32, radius: -radius * 2})
+  .append("path")
+    .attr("d", gear);
+
+frame.append("g")
+    .attr("class", "planet")
+    .attr("transform", "translate(" + -radius * 3 * x + "," + -radius * 3 * y + ")")
+    .datum({teeth: 32, radius: -radius * 2})
+  .append("path")
+    .attr("d", gear);
+
+frame.append("g")
+    .attr("class", "planet")
+    .attr("transform", "translate(" + radius * 3 * x + "," + -radius * 3 * y + ")")
+    .datum({teeth: 32, radius: -radius * 2})
+  .append("path")
+    .attr("d", gear);
+
+d3.selectAll("input[name=reference]")
+  .data([radius * 5, Infinity, -radius])
+    .on("change", function(radius1) {
+      var radius0 = frame.datum().radius, angle = (Date.now() - start) * speed;
+      frame.datum({radius: radius1});
+      svg.attr("transform", "rotate(" + (offset += angle / radius0 - angle / radius1) + ")");
+    });
+
+d3.selectAll("input[name=speed]")
+    .on("change", function() { speed = +this.value; });
+
+function gear(d) {
+  var n = d.teeth,
+      r2 = Math.abs(d.radius),
+      r0 = r2 - 8,
+      r1 = r2 + 8,
+      r3 = d.annulus ? (r3 = r0, r0 = r1, r1 = r3, r2 + 20) : 20,
+      da = Math.PI / n,
+      a0 = -Math.PI / 2 + (d.annulus ? Math.PI / n : 0),
+      i = -1,
+      path = ["M", r0 * Math.cos(a0), ",", r0 * Math.sin(a0)];
+  while (++i < n) path.push(
+      "A", r0, ",", r0, " 0 0,1 ", r0 * Math.cos(a0 += da), ",", r0 * Math.sin(a0),
+      "L", r2 * Math.cos(a0), ",", r2 * Math.sin(a0),
+      "L", r1 * Math.cos(a0 += da / 3), ",", r1 * Math.sin(a0),
+      "A", r1, ",", r1, " 0 0,1 ", r1 * Math.cos(a0 += da / 3), ",", r1 * Math.sin(a0),
+      "L", r2 * Math.cos(a0 += da / 3), ",", r2 * Math.sin(a0),
+      "L", r0 * Math.cos(a0), ",", r0 * Math.sin(a0));
+  path.push("M0,", -r3, "A", r3, ",", r3, " 0 0,0 0,", r3, "A", r3, ",", r3, " 0 0,0 0,", -r3, "Z");
+  return path.join("");
+}
+
+d3.timer(function() {
+  var angle = (Date.now() - start) * speed,
+      transform = function(d) { return "rotate(" + angle / d.radius + ")"; };
+  frame.selectAll("path").attr("transform", transform);
+  frame.attr("transform", transform); // frame of reference
+});
+
+</script>
+</div>
+</div>
+</body>
+</html>
