@@ -84,7 +84,7 @@ def models():
   return jsonify(items)
 
 def _range(model):
-  pattern = '/input/{0}/{0}_*.nc'.format(model,model)
+  pattern = '/input/{0}/*.nc'.format(model)
   fnames = glob.glob(pattern)
   fnames.sort()
   if len(fnames) == 0:
@@ -225,7 +225,8 @@ def _generate_project(context,status_output_path,log_output_path):
   output_file_prefix = context["output_file_prefix"]
   model = context["model"]
 
-  json_output_path = "{0}/output.json".format(release_dir)
+  json_output_path = "{0}/timepoints.json".format(release_dir)
+  geojson_output_path = "{0}/geo.json".format(release_dir)
   times_output_path = "{0}/times.json".format(release_dir)
   js_output_path = "{0}/projection.js".format(release_dir)
   nc_output_path = "{0}/output.nc".format(release_dir)
@@ -274,9 +275,13 @@ def _generate_project(context,status_output_path,log_output_path):
   with open(times_output_path,'w') as f:
       json.dump(times,f)
 
-  overwrite_json_file(status_output_path,"writing output.json")
-  with open(json_output_path,'w') as myfile:
+  overwrite_json_file(status_output_path,"writing geo.json")
+  with open(geojson_output_path,'w') as myfile:
     json.dump(points,myfile)
+
+  overwrite_json_file(status_output_path,"writing timepoints.json")
+  with open(json_output_path,'w') as myfile:
+    json.dump(points2,myfile)
 
   overwrite_json_file(status_output_path,"writing projection.js")
   with open(js_output_path,'w') as f:

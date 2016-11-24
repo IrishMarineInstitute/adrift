@@ -18,126 +18,38 @@
 <script type="text/javascript" src="/static/js/iso8601.min.js"></script>
 <script type="text/javascript" src="/static/js/heatmap.min.js"></script>
 <script type="text/javascript" src="/static/js/leaflet-heatmap.js"></script>
+<!--
+<script type="text/javascript" src="/static/js/dotter.js"></script>
+<script type="text/javascript" src="/static/js/leaflet-particle-dot.js"></script>
+-->
+<script type="text/javascript" src="/static/js/Leaflet.CanvasLayer.js"></script>
 <link rel="stylesheet" href="/static/css/Leaflet.Coordinates-0.1.5.css" />
 <script type="text/javascript" src="/static/js/Leaflet.Coordinates-0.1.5.min.js"></script>
+<script type="text/javascript" src="/static/js/Leaflet.TimeDimension.sodaHeatMap.js"></script>
 <script src="times.json"></script>
 <style>
-#map { height: 600px; width: 800px;}
+.map { height: 600px; width: 800px;}
 </style>
 <script>
-// Attibution: SODA API requests based on this example: https://github.com/chriswhong/soda-leaflet
-
-L.TimeDimension.Layer.SODAHeatMap = L.TimeDimension.Layer.extend({
-    _cachedData: {},
-
-    initialize: function(options) {
-        options = options || {};
-        options.heatmapOptions = options.heatmapOptions || {};
-        var heatmapCfg = {
-            radius: 5,
-            maxOpacity: .8,
-            scaleRadius: false,
-            useLocalExtrema: false,
-            latField: 'lat',
-            lngField: 'lng',
-            valueField: 'count'
-        };
-        heatmapCfg = $.extend({}, heatmapCfg, options.heatmapOptions );
-        var layer = new HeatmapOverlay(heatmapCfg);
-        L.TimeDimension.Layer.prototype.initialize.call(this, layer, options);
-        this._currentLoadedTime = 0;
-        this._currentTimeData = {
-            max: this.options.heatmapMax || 10,
-            data: []
-        };
-    },
-
-    onAdd: function(map) {
-        L.TimeDimension.Layer.prototype.onAdd.call(this, map);
-        map.addLayer(this._baseLayer);
-        if (this._timeDimension) {
-            this._getDataForTime(this._timeDimension.getCurrentTime());
-        }
-    },
-
-    _onNewTimeLoading: function(ev) {
-        this._getDataForTime(ev.time);
-        return;
-    },
-
-    isReady: function(time) {
-        return (this._currentLoadedTime == time);
-    },
-
-    _update: function() {
-        this._baseLayer.setData(this._currentTimeData);
-        var date = new Date(this._currentLoadedTime);
-        $("#utctime").text(date.toISOString());
-        $("#localtime").text(date.toString());
-        var bounds = map.getBounds();
-        bounds.extend(L.latLngBounds(this._currentTimeData.data));
-        map.fitBounds(bounds);
-        return true;
-    },
-
-    _getDataForTime: function(time) {
-        var url = "point_"+new Date(time).toISOString().substring(0,19)+"Z.json";
-        if(this._cachedData[url]){
-            this._assignDataForTime(time,this._cachedData[url]);
-        }else{
-          $.getJSON(url, (function(data) {
-            delete this._currentTimeData.data;
-            var locations = [];
-            for (var i = 0; i < data.length; i++) {
-                 locations.push({
-                        lat: data[i][0],
-                        lng: data[i][1],
-                        count: 1
-                    });
-            }
-            this._cachedData[url] = locations;
-            this._assignDataForTime(time,locations);
-          }).bind(this));
-        }
-    },
-    _assignDataForTime: function(time,locations){
-        this._currentTimeData.data = locations;
-        this._currentLoadedTime = time;
-        if (this._timeDimension && time == this._timeDimension.getCurrentTime() && !this._timeDimension.isLoading()) {
-            this._update();
-        }
-        this.fire('timeload', {
-            time: time
-        });
-     }
-  
-
-});
-
-L.timeDimension.layer.sodaHeatMap = function(options) {
-    return new L.TimeDimension.Layer.SODAHeatMap(options);
-};
-
-</script>
-<script>
 var map = undefined;
+//var dotter = new Dotter(2);
 
 $(document).ready(function(){
-  $.ajax({url: "times.json"}).done(function(data){
-     var times = [];
-     var date = new Date();
-     for(var i=0;i<data.length;i++){
-       date.setISO8601(data[i]);
-       times.push(date.getTime()); 
-     }
-     create_map(times);
-  });
   $.ajax({url: "context.json"}).done(function(data){
     var keys = Object.keys(data);
     for(var i=0;i<keys.length;i++){
       var key = keys[i];
       $("#ctx_"+key).text(data[key]);
     }
+  });
+  $.ajax({url: "timepoints.json"}).done(function(series){
+     var times = [];
+     var date = new Date();
+     for(var i=0;i<series.length;i++){
+       date.setISO8601(series[i].timestamp);
+       times.push(date.getTime()); 
+     }
+     map = create_timeseries_play_map(times,series);
   });
    
 });
@@ -151,7 +63,7 @@ $(document).ready(function(){
 <div class="row">
 </div>
 <div class="row">
-  <div id="map" class="map col-md-9"></div>
+  <div id="play_map" class="map col-md-9"></div>
   <div class='col-md-3'>
    <h3>Project Details</h3>
    <div class='table-responsive'>
@@ -181,42 +93,88 @@ $(document).ready(function(){
   </div>
 </div>
 <script>
-var create_map = function(times){
-    map = L.map('map', {
-    zoom: 13,
-    fullscreenControl: true,
-    timeDimensionControl: true,
-    timeDimensionControlOptions: {
-        position: 'bottomleft',
-        autoPlay: false,
-        timeSlider: true,
-        loopButton: true,
-        speedSlider: false,
-        playerOptions: {
-            transitionTime: 500,
-            loop: false,
-            buffer: 1
-        }
-    },
-    timeDimension: true,
-    timeDimensionOptions: {
-       times: times,
-       currentTime: times[0]
-    },
-    center: [{{latitude}}, {{longitude}}]
-});
-var tiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-}).addTo(map);
-L.control.coordinates({
+var current_draw = 0;
+var colour_layer = function(series){
+  return {
+     draw_points: function(this_draw,series,i,info,canvasWidth,canvasData){
+       if( i== series.length || this_draw != current_draw){
+         return;
+       }
+       var color1 = '1111FF';
+       var color2 = 'FFFFFF';
+       var ratio = (i+1)/series.length;
+       var r = Math.ceil(parseInt(color2.substring(0,2), 16) * ratio + parseInt(color1.substring(0,2), 16) * (1-ratio));
+       var g = Math.ceil(parseInt(color2.substring(2,4), 16) * ratio + parseInt(color1.substring(2,4), 16) * (1-ratio));
+       var b = Math.ceil(parseInt(color2.substring(4,6), 16) * ratio + parseInt(color1.substring(4,6), 16) * (1-ratio));
+       var a = 130 + Math.round(ratio*125);
+       var points = series[i].points;
+       for(var j=0;j<points.length;j++){
+          if(info.bounds.contains([points[j][0],points[j][1]])){
+              var dot = info.layer._map.latLngToContainerPoint([points[j][0], points[j][1]]);
+              var index = (dot.x+dot.y*canvasWidth)*4;
+              if(canvasData.data[index + 3] == 0){
+                canvasData.data[index + 0] = r;
+                canvasData.data[index + 1] = g;
+                canvasData.data[index + 2] = b;
+                canvasData.data[index + 3] = a;
+             }
+          }
+       }
+       var ctx = info.canvas.getContext('2d');
+       ctx.putImageData(canvasData,0,0);
+       setTimeout(this.draw_points.bind(this,this_draw,series,i+1,info,canvasWidth,canvasData),Math.round(1000/series.length));
+     },
+     onDrawLayer: function(info){
+         var this_draw = ++current_draw;
+         var ctx = info.canvas.getContext('2d');
+         var canvasWidth = info.canvas.width;
+         var canvasHeight = info.canvas.height;
+         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+         var canvasData = ctx.getImageData(0,0,canvasWidth,canvasHeight);
+         setTimeout(this.draw_points.bind(this,this_draw,series,0,info,canvasWidth,canvasData),2000);
+      }
+  };
+}
+
+var create_timeseries_play_map = function(times,series){
+    var map = L.map('play_map', {
+      zoom: 13,
+      fullscreenControl: true,
+      timeDimensionControl: true,
+      timeDimensionControlOptions: {
+          position: 'bottomleft',
+          autoPlay: false,
+          timeSlider: true,
+          loopButton: true,
+          speedSlider: false,
+          playerOptions: {
+              transitionTime: 500,
+              loop: false,
+              buffer: 1
+          }
+      },
+      timeDimension: true,
+      timeDimensionOptions: {
+         times: times,
+         series: series,
+         currentTime: times[0]
+      },
+      center: [{{latitude}}, {{longitude}}]
+     });
+  var tiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map);
+  L.canvasLayer().delegate(colour_layer(series)).addTo(map);
+  L.control.coordinates({
     position: "bottomright",
     decimals: 3,
     labelTemplateLat: "Latitude: {y}",
     labelTemplateLng: "Longitude: {x}",
     useDMS: false,
     enableUserInput: false
-}).addTo(map);
-L.timeDimension.layer.sodaHeatMap().addTo(map);
+  }).addTo(map);
+  L.timeDimension.layer.sodaHeatMap().addTo(map);
+  return map;
 }
 
 </script>
