@@ -4,6 +4,7 @@
 <title>projection</title>
 
 <meta charset="utf-8">
+<link rel="icon" href="/static/img/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.ico" />
 <link rel="stylesheet" href="/static/css/leaflet.css" />
@@ -11,6 +12,7 @@
 <script src="/static/js/jquery.min.js"></script>
 <link rel="stylesheet" href="/static/css/bootstrap.min.css">
 <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="/static/css/bootstrap-editable.css">
 <script src="/static/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="/static/css/leaflet.timedimension.control.min.css" />
 <script type="text/javascript" src="/static/js/leaflet.timedimension.min.js"></script>
@@ -26,21 +28,26 @@
 <link rel="stylesheet" href="/static/css/Leaflet.Coordinates-0.1.5.css" />
 <script type="text/javascript" src="/static/js/Leaflet.Coordinates-0.1.5.min.js"></script>
 <script type="text/javascript" src="/static/js/Leaflet.TimeDimension.sodaHeatMap.js"></script>
+<script src="/static/js/bootstrap-editable.min.js"></script>
 <script src="times.json"></script>
 <style>
 .map { height: 600px; width: 800px;}
 </style>
 <script>
+$.fn.editable.defaults.mode = 'inline';
 var map = undefined;
-//var dotter = new Dotter(2);
-
 $(document).ready(function(){
-  $.ajax({url: "context.json"}).done(function(data){
+  $.ajax({url: "context.json", cache: false}).done(function(data){
     var keys = Object.keys(data);
     for(var i=0;i<keys.length;i++){
       var key = keys[i];
       $("#ctx_"+key).text(data[key]);
     }
+    $("#ctx_project_name").editable({
+      type: 'text',
+      pk: 1,
+      url: 'update'
+    });
   });
   $.ajax({url: "timepoints.json"}).done(function(series){
      var times = [];
@@ -58,7 +65,7 @@ $(document).ready(function(){
 <body>
 <div class="container">
 <h1><a href="/">ADRIFT</a></h1>
-<p class="lead">Welcome to the <a href="http://www.marine.ie/">Marine Institute</a> application for Advanced Data Representation Indicating Flow Trajectory (ADRIFT)</p> 
+<p class="lead"><a href="http://www.marine.ie/">Marine Institute</a> assisted discovery/recovery of interesting floating things.</p>
 <h3 id="ctx_project_name"></h3>
 <div class="row">
 </div>
@@ -98,6 +105,10 @@ var colour_layer = function(series){
   return {
      draw_points: function(this_draw,series,i,info,canvasWidth,canvasData){
        if( i== series.length || this_draw != current_draw){
+         if(this_draw == current_draw){
+           var ctx = info.canvas.getContext('2d');
+           ctx.putImageData(canvasData,0,0);
+         }
          return;
        }
        var color1 = '1111FF';
@@ -106,7 +117,7 @@ var colour_layer = function(series){
        var r = Math.ceil(parseInt(color2.substring(0,2), 16) * ratio + parseInt(color1.substring(0,2), 16) * (1-ratio));
        var g = Math.ceil(parseInt(color2.substring(2,4), 16) * ratio + parseInt(color1.substring(2,4), 16) * (1-ratio));
        var b = Math.ceil(parseInt(color2.substring(4,6), 16) * ratio + parseInt(color1.substring(4,6), 16) * (1-ratio));
-       var a = 130 + Math.round(ratio*125);
+       var a = 255;//130 + Math.round(ratio*125);
        var points = series[i].points;
        for(var j=0;j<points.length;j++){
           if(info.bounds.contains([points[j][0],points[j][1]])){
@@ -120,9 +131,10 @@ var colour_layer = function(series){
              }
           }
        }
-       var ctx = info.canvas.getContext('2d');
-       ctx.putImageData(canvasData,0,0);
-       setTimeout(this.draw_points.bind(this,this_draw,series,i+1,info,canvasWidth,canvasData),Math.round(1000/series.length));
+       //var ctx = info.canvas.getContext('2d');
+       //ctx.putImageData(canvasData,0,0);
+       //setTimeout(this.draw_points.bind(this,this_draw,series,i+1,info,canvasWidth,canvasData),Math.round(1000/series.length));
+       setTimeout(this.draw_points.bind(this,this_draw,series,i+1,info,canvasWidth,canvasData),0);
      },
      onDrawLayer: function(info){
          var this_draw = ++current_draw;
@@ -131,7 +143,8 @@ var colour_layer = function(series){
          var canvasHeight = info.canvas.height;
          ctx.clearRect(0, 0, canvasWidth, canvasHeight);
          var canvasData = ctx.getImageData(0,0,canvasWidth,canvasHeight);
-         setTimeout(this.draw_points.bind(this,this_draw,series,0,info,canvasWidth,canvasData),2000);
+         //setTimeout(this.draw_points.bind(this,this_draw,series,0,info,canvasWidth,canvasData),2000);
+         setTimeout(this.draw_points.bind(this,this_draw,series,0,info,canvasWidth,canvasData),0);
       }
   };
 }
@@ -140,6 +153,37 @@ var create_timeseries_play_map = function(times,series){
     var map = L.map('play_map', {
       zoom: 13,
       fullscreenControl: true,
+      center: [{{latitude}}, {{longitude}}]
+   });
+  var colourLayer = L.canvasLayer().delegate(colour_layer(series));
+  colourLayer.addTo(map);
+
+    var timeDimension = new L.TimeDimension({
+         times: times,
+         series: series,
+         currentTime: times[0]
+    });
+    map.timeDimension = timeDimension;
+    var player = new L.TimeDimension.Player({
+        transitionTime: 500,
+        loop: false,
+        buffer: 1
+    }, timeDimension);
+    var timeDimensionControlOptions = {
+          position: 'bottomleft',
+          autoPlay: false,
+          timeSlider: true,
+          loopButton: true,
+          speedSlider: false,
+          player: player
+    };
+    var timeDimensionControl = new L.Control.TimeDimension(timeDimensionControlOptions);
+    map.addControl(timeDimensionControl);
+/*
+    var map = L.map('play_map', {
+      zoom: 13,
+      fullscreenControl: true,
+      center: [{{latitude}}, {{longitude}}],
       timeDimensionControl: true,
       timeDimensionControlOptions: {
           position: 'bottomleft',
@@ -159,12 +203,11 @@ var create_timeseries_play_map = function(times,series){
          series: series,
          currentTime: times[0]
       },
-      center: [{{latitude}}, {{longitude}}]
      });
+*/
   var tiles = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
   }).addTo(map);
-  L.canvasLayer().delegate(colour_layer(series)).addTo(map);
   L.control.coordinates({
     position: "bottomright",
     decimals: 3,
@@ -173,7 +216,9 @@ var create_timeseries_play_map = function(times,series){
     useDMS: false,
     enableUserInput: false
   }).addTo(map);
-  L.timeDimension.layer.sodaHeatMap().addTo(map);
+  var heatMapLayer = L.timeDimension.layer.sodaHeatMap();
+  heatMapLayer.addTo(map);
+  L.control.layers({},{"Particles": colourLayer,"Heat Map": heatMapLayer}).addTo(map);
   return map;
 }
 

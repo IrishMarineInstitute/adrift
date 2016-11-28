@@ -3,6 +3,7 @@
 <title>Project Status...</title>
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="/static/img/favicon.ico">
 <link rel="stylesheet" href="/static/css/leaflet.css" />
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/moment.min.js"></script>
@@ -64,16 +65,11 @@ $(document).ready(function(){
 <body>
 <div class="container">
 <h1><a href="/">ADRIFT</a></h1>
-<p class="lead">Welcome to the <a href="http://www.marine.ie/">Marine Institute</a> application for Advanced Data Representation Indicating Flow Trajectory (ADRIFT)</p> 
+<p class="lead"><a href="http://www.marine.ie/">Marine Institute</a> assisted discovery/recovery of interesting floating things.</p>
 <div class="row">
 <div class="col-md-12">
-<h3>New Project</h3>
 <form method="post" action="/api/model/{{model}}/projection">
-  <div class="form-group">
-    <label class="control-label">Project Name</label>
-    <input required id="project_name" name="project_name" class="form-control" type="text" placeholder="Give a name for this project">
-  </div>
-  <h4>Start Location</h4>
+  <h4>Enter New Project Start Location <small>or drag marker</small></h4>
   <div class="row">
    <div class="col-md-4">
     <div class="form-group">
@@ -85,27 +81,15 @@ $(document).ready(function(){
       <input required type="number" min="{{longitude_min}}" max="{{longitude_max}}" step="any" id="longitude" name="longitude" class="form-control" value="{{longitude}}" >
     </div>
   <div class="form-group">
-    <label class="control-label">Start Time</label>
+    <label class="control-label">Start Time (UTC)</label>
     <input required id="start_time_picker" value="{{date_min}}" name="start_time_picker" size="20" type="text" readonly class="form_datetime" >
     <input type="hidden" id="start_time" name="start_time" value="{{date_min}}">
   </div>
   <div class="form-group">
-    <label class="control-label">End Time</label>
+    <label class="control-label">End Time (UTC)</label>
     <input required id="end_time_picker" value="{{date_max}}" name="end_time_picker" size="20" type="text" readonly class="form_datetime" >
     <input type="hidden" id="end_time" name="end_time" value="{{date_max}}">
   </div>
-  <div class="radio">
-   <label>
-    <input type="radio" name="timetype" id="timetype" value="utc" checked>
-    UTC Time is shown above
-   </label>
- </div>
-  <div class="radio">
-   <label>
-    <input type="radio" name="timetype" id="timetype" value="local" checked>
-    Local Time is shown above
-   </label>
- </div>
   <div class="form-group">
     <label class="control-label">Radius (metres)</label>
     <input required type="number" min="1" max="1000" step="1" id="radius" name="radius" class="form-control" value="250" >

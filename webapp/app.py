@@ -46,6 +46,22 @@ def show_output(project):
       context = json.load(f)
       return render_template('project.html',latitude=context["latitude"],longitude=context["longitude"])
 
+@app.route('/project/<path:project>/update', methods=['POST'])
+def update_context(project):
+    context = None
+    context_file_path = "/output/{0}/context.json".format(project)
+    with open(context_file_path) as f:
+      context = json.load(f)
+    name = request.values.get('name')
+    if "ctx_" in name:
+       name = name[4:]
+    value = request.values.get('value')
+    if name in context:
+       context[name] = value
+       with open(context_file_path,'w') as f:
+          json.dump(context,f)
+    return "OK"
+
 @app.route('/project/<path:project>/<file>')
 def show_project_file(project,file):
     return send_file("/output/{0}/{1}".format(project,file))
@@ -136,8 +152,9 @@ def projection(model):
              "lat_max": lat_max, "lon_min": lon_min, "lon_max": lon_max
              }
   }
-  project_name = request.values.get('project_name')
   start_release_time = dateutil.parser.parse(request.values.get('start_time',time_min))
+  project_name = request.values.get('project_name',
+                'Project {0} (click to rename)'.format(start_release_time.strftime("%Y-%m-%d %H:%M")))
   end_release_time = dateutil.parser.parse(request.values.get('end_release_time',start_release_time.isoformat()))
   end_time = dateutil.parser.parse(request.values.get('end_time',time_max))
   latitude = float(request.values.get('latitude',defaults["latitude"]))

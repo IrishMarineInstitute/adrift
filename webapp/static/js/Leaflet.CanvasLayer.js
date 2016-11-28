@@ -78,7 +78,8 @@ L.CanvasLayer = (L.Layer ? L.Layer : L.Class).extend({
         L.DomUtil.addClass(this._canvas, 'leaflet-zoom-' + (animated ? 'animated' : 'hide'));
 
 
-        map._panes.overlayPane.appendChild(this._canvas);
+        //map._panes.overlayPane.appendChild(this._canvas);
+        map._panes.tilePane.appendChild(this._canvas);
 
         map.on(this.getEvents(),this);
         
@@ -93,7 +94,8 @@ L.CanvasLayer = (L.Layer ? L.Layer : L.Class).extend({
         del.onLayerWillUnmount && del.onLayerWillUnmount(); // -- callback
    
 
-        map.getPanes().overlayPane.removeChild(this._canvas);
+        //map.getPanes().overlayPane.removeChild(this._canvas);
+        map.getPanes().tilePane.removeChild(this._canvas);
  
         map.off(this.getEvents(),this);
         
