@@ -75,12 +75,24 @@ $(document).ready(function(){
             var t1 = Math.round(((value[0]/10000)*date_range_millis+min_date.getTime())/(1000*60*5))*1000*60*5;
             var t2 = Math.round(((value[1]/10000)*date_range_millis+min_date.getTime())/(1000*60*5))*1000*60*5;
 
+            var duration = t2 - t1;
+            var dminutes = Math.trunc(duration/1000/60);
+            var dhours = Math.trunc(dminutes/60);
+            var ddays = Math.trunc(dhours/24);
+            var sduration = ddays == 0?"":ddays==1?"1 day ":(""+ddays+" days");
+            if(dhours > 0){
+               var rhours = dhours % 24;
+               sduration += rhours == 0?"":rhours==1?" 1 hour":(" "+rhours+" hours");
+            } 
+            var rminutes = dminutes % 60;
+            sduration += rminutes==0?"":(" "+rminutes+" minutes");
             var s1 = new Date(t1).toISOString().substring(0,19)+"Z";
             var s2 = new Date(t2).toISOString().substring(0,19)+"Z";
 
             $("#start_time_label").text(s1);
             $("#start_time").val(s1);
             $("#end_time_label").text(s2);
+            $("#duration_label").text(sduration);
             $("#end_time").val(s2);
 	    return s1+" for "+moment.duration(t2-t1).humanize();
 	}
@@ -113,9 +125,9 @@ $(document).ready(function(){
        <input id="timeslider" type="text" class="span2" value="" data-slider-tooltip="hide" data-slider-min="0" data-slider-max="10000" data-slider-step="1" data-slider-value="[3000,7000]"/>
      </div>
      <div class="form-group">
-       <label class="control-label">Start: <span id="start_time_label"></span></label>
+       <label class="control-label"><span id="start_time_label"></span> to <span id="end_time_label"></span></label>
+       <p id="duration_label"></p>
        <input type="hidden" id="start_time" name="start_time" value="{{date_min}}">
-       <label class="control-label">End: <span id="end_time_label"></span></label>
        <input type="hidden" id="end_time" name="end_time" value="{{date_max}}">
      </div>
      <div class="form-group">
