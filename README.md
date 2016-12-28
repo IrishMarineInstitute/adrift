@@ -6,6 +6,7 @@ Before installing, download [ichthyop-3.2.zip](http://www.ichthyop.org/) into th
 
 # nfs mount
 Connect ROMS output to the host server.
+
 1. Install the autofs package if it’s not already installed
 2. put the attached auto.prometheus file in the /etc folder
 3. add the following line to the /etc/auto.master file (which should exist if autofs is installed)
@@ -20,6 +21,9 @@ docker build -t adrift .
 # running
 
 ```bash
-docker run -d --restart=always -v /mnt/prometheus/shared/model/ROMS/OUTPUT/NE_Atlantic/FC/WEEK_ARCHIVE/:/input/connemara_his -v /home/opsuser/dev/docker-ichthyop/output:/output -p 80:5000 --name=adrift adrift
+docker run -d --restart=always \
+-v /mnt/prometheus/shared/model/ROMS/OUTPUT/NE_Atlantic/FC/WEEK_ARCHIVE/:/input/connemara_his \
+-v /home/opsuser/dev/docker-ichthyop/output:/output \
+-p 80:5000 --name=adrift adrift
 ```
 
