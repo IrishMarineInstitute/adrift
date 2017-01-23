@@ -22,7 +22,7 @@ docker build -t adrift .
 
 ```bash
 docker run -d --restart=always \
--v /mnt/prometheus/shared/model/ROMS/OUTPUT/NE_Atlantic/FC/WEEK_ARCHIVE/:/input/connemara_his \
+-v /mnt/prometheus/shared/model/ROMS/OUTPUT/Connemara/FC/WEEK_ARCHIVE/:/input/connemara_his \
 -v /home/opsuser/dev/docker-ichthyop/output:/output \
 -p 80:5000 --name=adrift adrift
 ```

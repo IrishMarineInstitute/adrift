@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="/static/css/bootstrap-slider.min.css" />
 <script src="/static/js/jquery.min.js"></script>
 <script src="/static/js/moment.min.js"></script>
+<script src="/static/js/chrono.min.js"></script>
+<script src="/static/js/juration.js"></script>
 <script src="/static/js/iso8601.js"></script>
 <script src="/static/js/bootstrap-slider.min.js"></script>
 <script src="/static/js/leaflet.js"></script>
@@ -61,42 +63,50 @@ var format_date = function(d){
    return d.toISOString().substring(0,19)+"Z";
 }
 
+var picker_date_format = "MMM DD h:mm A"
+
+var update_dates = function(){
+   var startdate = chrono.parseDate($("#start_time_picker").val());
+   if(startdate == null){
+      $("#start_time_label").text("Unrecognised start time");
+   }else{
+     if(startdate.getTime()<min_date.getTime()){
+        startdate = new Date(min_date.getTime()); 
+        $("#start_time_picker").val(moment(startdate).format(picker_date_format));
+        $('#start_time_picker').animate({backgroundColor: '#FF0000'}, 'slow');
+     }else if(startdate.getTime()>max_date.getTime()-3600000){
+        startdate = new Date(max_date.getTime()-3600000);
+        $("#start_time_picker").val(moment(startdate).format(picker_date_format));
+        $('#start_time_picker').animate({backgroundColor: '#FF0000'}, 'slow');
+     }
+     $("#start_time_label").text(format_date(startdate));
+     $("#start_time").val(format_date(startdate));
+   }
+   try{
+       var duration = juration.parse($("#duration").val());
+       var enddate = new Date(startdate.getTime()+(duration*1000));
+       if(enddate.getTime()>max_date.getTime()){
+         enddate = new Date(max_date.getTime());
+         duration = (enddate.getTime()-startdate.getTime())/1000;
+         $("#duration").val(juration.stringify(duration,{format: 'long'}));
+       }
+      $("#end_time").val(format_date(enddate));
+      $("#end_time_label").text(format_date(enddate));
+   }catch(e){
+     $("#end_time_label").text("Unrecognised duration");
+   }
+};
 $(document).ready(function(){
    $("#radius").slider({
 	formatter: function(value) {
           $("#radius_label").text(value);
         }
      });
-   $("#timeslider").slider({
-	formatter: function(value) {
-            if(!(value instanceof Array)){
-              return "";
-            }
-            var t1 = Math.round(((value[0]/10000)*date_range_millis+min_date.getTime())/(1000*60*5))*1000*60*5;
-            var t2 = Math.round(((value[1]/10000)*date_range_millis+min_date.getTime())/(1000*60*5))*1000*60*5;
+    $("input:text").focus(function() { $(this).select(); } );
 
-            var duration = t2 - t1;
-            var dminutes = Math.trunc(duration/1000/60);
-            var dhours = Math.trunc(dminutes/60);
-            var ddays = Math.trunc(dhours/24);
-            var sduration = ddays == 0?"":ddays==1?"1 day ":(""+ddays+" days");
-            if(dhours > 0){
-               var rhours = dhours % 24;
-               sduration += rhours == 0?"":rhours==1?" 1 hour":(" "+rhours+" hours");
-            } 
-            var rminutes = dminutes % 60;
-            sduration += rminutes==0?"":(" "+rminutes+" minutes");
-            var s1 = new Date(t1).toISOString().substring(0,19)+"Z";
-            var s2 = new Date(t2).toISOString().substring(0,19)+"Z";
-
-            $("#start_time_label").text(s1);
-            $("#start_time").val(s1);
-            $("#end_time_label").text(s2);
-            $("#duration_label").text(sduration);
-            $("#end_time").val(s2);
-	    return s1+" for "+moment.duration(t2-t1).humanize();
-	}
-    });
+   $("#start_time_picker").on("change",update_dates);
+   $("#duration").on("change",update_dates);
+   update_dates();
    create_map();
    $("#project_name").focus();
 });
@@ -105,37 +115,44 @@ $(document).ready(function(){
 <body>
 <div class="container">
 <h1><a href="/">ADRIFT</a></h1>
-<p class="lead"><a href="http://www.marine.ie/">Marine Institute</a> assisted discovery/recovery of interesting floating things.</p>
+<p class="lead"><a href="http://www.marine.ie/">Marine Institute</a> predicted sea surface tracking.</p>
 <div class="row">
 <div class="col-md-12">
-<form method="post" action="/api/model/{{model}}/projection">
+<form id="new_project_form" method="post" action="/api/model/{{model}}/projection">
   <h4>Enter New Project Start Location <small>or drag marker</small></h4>
   <div class="row">
    <div class="col-md-4">
      <div class="form-group">
        <label class="control-label">Latitude</label>
-       <input required type="number" min="{{latitude_min}}" max="{{latitude_max}}" step="any" id="latitude" name="latitude" class="form-control" value="{{latitude}}" >
+       <input class="form-control" required type="number" size="20" min="{{latitude_min}}" max="{{latitude_max}}" step="any" id="latitude" name="latitude" value="{{latitude}}" >
      </div>
      <div class="form-group">
        <label class="control-label">Longitude</label>
-       <input required type="number" min="{{longitude_min}}" max="{{longitude_max}}" step="any" id="longitude" name="longitude" class="form-control" value="{{longitude}}" >
+       <input class="form-control" required type="number" size="20" min="{{longitude_min}}" max="{{longitude_max}}" step="any" id="longitude" name="longitude" value="{{longitude}}" >
      </div>
-     <div>
-       <label class="control-label">UTC Time</label>
-       <input id="timeslider" type="text" class="span2" value="" data-slider-tooltip="hide" data-slider-min="0" data-slider-max="10000" data-slider-step="1" data-slider-value="[3000,7000]"/>
-     </div>
-     <div class="form-group">
-       <label class="control-label"><span id="start_time_label"></span> to <span id="end_time_label"></span></label>
-       <p id="duration_label"></p>
-       <input type="hidden" id="start_time" name="start_time" value="{{date_min}}">
-       <input type="hidden" id="end_time" name="end_time" value="{{date_max}}">
-     </div>
+  <div class="form-group">
+    <label class="control-label">Start Time</label>
+    <input class="form-control" required id="start_time_picker" value="Yesterday at 10:45pm" name="start_time_picker" size="20" type="text" >
+    <input type="hidden" id="start_time" name="start_time" value="{{date_min}}">
+  </div>
+  <div class="form-group">
+    <label class="control-label">Duration</label>
+     <input class="form-control" required id="duration" value="12 hours" name="duration" size="20" type="text" >
+    <input type="hidden" id="end_time" name="end_time" value="{{date_max}}">
+  </div>
      <div class="form-group">
        <label class="control-label">Radius <span id="radius_label"></span> metres </label>
-       <input id="radius" name="radius" data-slider-id='radius' data-slider-tooltip="hide" type="text" data-slider-min="5" data-slider-max="1000" data-slider-step="5" data-slider-value="250"/>
+       <input class="form-control" id="radius" name="radius" data-slider-id='radius' data-slider-tooltip="hide" type="text" data-slider-min="5" data-slider-max="1000" data-slider-step="5" data-slider-value="250"/>
      </div>
+  <div class="form-group">
+    <label class="control-label">Start (UTC)</label>
+     <span id="start_time_label"></span>
+    <br>
+    <label class="control-label">End (UTC)</label>
+     <span id="end_time_label"></span>
+  </div>
      <div class="form-group">
-      <button type="submit" class="btn btn-default">Submit</button>
+      <button  type="submit" class="btn btn-default">Submit</button>
       <a href="/" class="btn btn-default">Cancel</a>
      </div>
    </div>
