@@ -32,10 +32,17 @@
 <script src="times.json"></script>
 <style>
 .map { height: 600px; width: 800px;}
+.searchBoxLabel {
+  color: red;
+  background-color: rgba(255, 0, 0, 0.05);
+  border: 1px;
+}
+
 </style>
 <script>
 $.fn.editable.defaults.mode = 'inline';
 var map = undefined;
+var controlLayer = undefined;
 $(document).ready(function(){
   $.ajax({url: "context.json", cache: false}).done(function(data){
     var keys = Object.keys(data);
@@ -57,9 +64,23 @@ $(document).ready(function(){
        times.push(date.getTime()); 
      }
      map = create_timeseries_play_map(times,series);
+     $.ajax({url: "/static/js/gb-search-areas.json"}).done(function(features){
+        var searchBoxes = L.geoJSON(features,{
+                       onEachFeature: labelSearchBox
+                      });
+         controlLayer.addOverlay(searchBoxes,"Search Areas");
+
+     });
   });
    
 });
+
+function labelSearchBox(feature,layer){
+    layer.bindTooltip(feature.properties.name, {
+      permanent: true, direction:"center", className: "searchBoxLabel"
+    });//.openTooltip();
+}
+
 </script>
 </head>
 <body>
@@ -218,7 +239,8 @@ var create_timeseries_play_map = function(times,series){
   }).addTo(map);
   var heatMapLayer = L.timeDimension.layer.sodaHeatMap();
   heatMapLayer.addTo(map);
-  L.control.layers({},{"Particles": colourLayer,"Heat Map": heatMapLayer}).addTo(map);
+  controlLayer = L.control.layers({},{"Particles": colourLayer,"Heat Map": heatMapLayer});
+  controlLayer.addTo(map);
   return map;
 }
 
