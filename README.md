@@ -27,3 +27,5 @@ docker run -d --restart=always \
 -p 80:5000 --name=adrift adrift
 ```
 
+Running in docker-compose also check the docs to create the [htaccess password file](https://github.com/jwilder/nginx-proxy#basic-authentication-support)
+

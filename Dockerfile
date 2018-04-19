@@ -13,6 +13,7 @@ RUN mkdir /output && mkdir /input
 
 COPY webapp /webapp
 WORKDIR /webapp
+EXPOSE 5000
 CMD ["python","app.py"]
 
 
