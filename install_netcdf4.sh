@@ -37,7 +37,7 @@ cd ..
 
 # Install Netcdf
 v=4.1.3
-wget http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-${v}.tar.gz
+wget --no-check-certificate http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-${v}.tar.gz
 tar -xf netcdf-${v}.tar.gz && cd netcdf-${v}
 prefix="/usr/local/"
 if [ $NETCDF4_DIR != $prefix ]; then
