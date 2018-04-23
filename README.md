@@ -18,6 +18,15 @@ Connect ROMS output to the host server.
 docker build -t adrift .
 ```
 
+# fetching some model data data files from the main demo server
+```bash
+mkdir -p input/connemara_his
+cd input/connemara_his
+read username
+read password
+for item in 18 19 20 21 22 23 24 25; do wget --user=$username --password=$password "https://adrift.demo.marine.ie/nc/CONN_20180406${item}.nc"; done
+```
+
 # running
 
 ```bash
