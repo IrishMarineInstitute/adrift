@@ -9,14 +9,14 @@ url = '/output/fred.nc'
 nc = netCDF4.Dataset(url)
 
 # examine the variables
-print nc.variables.keys()
+print(nc.variables.keys())
 t = nc.variables['time'][:]
 depth = nc.variables['depth'][:]
 region_edge = nc.variables['region_edge'][:]
 mortality = nc.variables['mortality']
-print region_edge[4], region_edge[5]
-print nc.variables['time']
-print t
+print(region_edge[4], region_edge[5])
+print(nc.variables['time'])
+print(t)
 
 extent = [-9.75,-8.8,53.3,53.]
 map = None

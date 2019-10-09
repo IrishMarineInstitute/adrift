@@ -1,4 +1,3 @@
-from __future__ import print_function
 from flask import Flask, render_template, jsonify, request, abort, send_file, redirect
 from flask_socketio import SocketIO, emit
 import glob
@@ -10,13 +9,13 @@ import pystache
 import hashlib
 import json
 import codecs
-import subprocess
 import sys
 import os
 from processify import processify
 import subprocess
 import shutil
 from operator import itemgetter
+import traceback
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -100,23 +99,27 @@ def models():
   return jsonify(items)
 
 def _range(model):
+  md = _models()[model]
+  var_time = md['variables']['time']
+  var_lat = md['variables']['latitude']
+  var_lon = md['variables']['longitude']
   pattern = '/input/{0}/*.nc'.format(model)
   fnames = glob.glob(pattern)
   fnames.sort()
   if len(fnames) == 0:
      print("no files found matching {0}".format(pattern), file=sys.stderr)
      abort(412)
-  cdfa = netCDF4.MFDataset(fnames[0])
-  cdfz = netCDF4.MFDataset(fnames[-1])
-  start_time = netCDF4.num2date(cdfa.variables['ocean_time'][:],cdfa.variables['ocean_time'].units)[0]
-  end_time = netCDF4.num2date(cdfz.variables['ocean_time'][:],cdfz.variables['ocean_time'].units)[0]
+  cdfa = netCDF4.MFDataset(fnames[0],aggdim=var_time)
+  cdfz = netCDF4.MFDataset(fnames[-1],aggdim=var_time)
+  start_time = netCDF4.num2date(cdfa.variables[var_time][:],cdfa.variables[var_time].units)[0]
+  end_time = netCDF4.num2date(cdfz.variables[var_time][:],cdfz.variables[var_time].units)[-1]
   
   time_min = "{0}Z".format(start_time).replace(" ","T")
   time_max = "{0}Z".format(end_time).replace(" ","T")
-  lat_min = np.min(cdfa.variables['lat_u'][:])
-  lat_max = np.max(cdfa.variables['lat_u'][:])
-  lon_min = np.min(cdfa.variables['lon_u'][:])
-  lon_max = np.max(cdfa.variables['lon_u'][:])
+  lat_min = float(np.min(cdfa.variables[var_lat][:]))
+  lat_max = float(np.max(cdfa.variables[var_lat][:]))
+  lon_min = float(np.min(cdfa.variables[var_lon][:]))
+  lon_max = float(np.max(cdfa.variables[var_lon][:]))
   return (time_min,time_max,lat_min,lat_max,lon_min,lon_max)
 
 @app.route('/api/projects')
@@ -174,7 +177,7 @@ def projection(model):
   output_path = '/output/{0}'.format(model_date_path)
   if not os.path.exists(output_path):
     os.makedirs(output_path)
-  context = {
+  updates = {
            'latitude': latitude,
            'longitude': longitude,
            'beginning': beginning,
@@ -186,8 +189,9 @@ def projection(model):
            'radius': radius,
            'model': model
    }
+  context = {**defaults, **updates}
   to_hash["context"] = context
-  hash = hashlib.sha224(json.dumps(to_hash,sort_keys=True)).hexdigest()
+  hash = hashlib.sha224(json.dumps(to_hash,sort_keys=True).encode('utf-8')).hexdigest()
   output_file_prefix = "{0}_{1}".format(model,hash)
   release_dir = "{0}/{1}".format(output_path,hash)
 
@@ -234,6 +238,7 @@ def generate_project(context_file_path):
    try:
      _generate_project(context,status_output_path,log_output_path)
    except:
+     traceback.print_exc(file=sys.stderr)
      overwrite_json_file(status_output_path,"Project failed: {0}".format(sys.exc_info()[0]))
 
 def _generate_project(context,status_output_path,log_output_path):
@@ -267,8 +272,11 @@ def _generate_project(context,status_output_path,log_output_path):
         myfile.write(xml)
   
       with open(log_output_path,'w') as applog:
-        proc = subprocess.Popen(['java', '-jar', '/ichthyop/ichthyop-3.2.jar', xmlconfig], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        for line in iter(proc.stdout.readline, ''):
+        pattern = '/ichthyop/ichthyop_*.jar'.format(model)
+        jar = glob.glob(pattern)[0]
+        proc = subprocess.Popen(['java', '-jar', jar, xmlconfig], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        for line in iter(proc.stdout.readline, b''):
+          line = line.decode('utf-8')
           applog.write(line)
           if line.startswith("INFO: Step"):
             overwrite_json_file(status_output_path,line)

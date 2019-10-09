@@ -3,7 +3,18 @@
     "id": "connemara_his", 
     "name": "Galway Bay",
     "defaults": {
-         "latitude": 53.256302, "longitude": -9.005189
+         "latitude": 53.256302,
+	 "longitude": -9.005189,
+	 "northwest_lat": 52,
+	 "northwest_lon": -10,
+	 "southeast_lat": 50,
+	 "southeast_lon": -8,
+	 "thickness": 2
+    },
+    "variables": {
+	 "latitude": "lat_u",
+	 "longitude": "lon_u",
+	 "time": "ocean_time"
     }
   }
 }

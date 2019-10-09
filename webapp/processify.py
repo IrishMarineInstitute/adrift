@@ -66,9 +66,9 @@ def test_exception():
 
 
 def test():
-    print os.getpid()
-    print test_function()
-    print len(test_deadlock())
+    print(os.getpid())
+    print(test_function())
+    print(len(test_deadlock()))
     test_exception()
 
 if __name__ == '__main__':

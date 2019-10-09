@@ -1,8 +1,7 @@
-<?xml version="1.0" encoding="Cp1252"?>
+<?xml version="1.0" encoding="utf-8"?>
 <icstructure>
   <long_name>ROMS 3D Ichthyop configuration file</long_name>
   <description>Predefined parameters for ROMS dataset from NetCDF files.</description>
-  <version date="2012/11/20">3.2</version>
   <block type="option">
     <tree_path>Main/Time</tree_path>
     <key>app.time</key>
@@ -64,6 +63,25 @@
         <accepted>forward</accepted>
         <default>forward</default>
         <description>Run the simulation backward or forward in time. Ichthyop advection schemes are not 'centered in time' which raises some questions for backtracking. Please refer to the userguide for details.</description>
+      </parameter>
+    </parameters>
+  </block>
+  <block type="option">
+    <tree_path>Advanced/Transport/General</tree_path>
+    <key>app.transport</key>
+    <description>Set the general transport options of the simulation.</description>
+    <parameters>
+      <parameter>
+        <key>coastline_behavior</key>
+        <long_name>Coastline behavior</long_name>
+        <value>Beaching</value>
+        <default>Beaching</default>
+        <format>combo</format>
+        <accepted>None</accepted>
+        <accepted>Beaching</accepted>
+        <accepted>Bouncing</accepted>
+        <accepted>Standstill</accepted>
+        <description>Determines what should be the behavior of a particle in case a move would take it inland : either it stands still, either it beaches, either it bounces on the coasline as a billiard ball.</description>
       </parameter>
     </parameters>
   </block>
@@ -152,7 +170,7 @@
       <parameter>
         <key>north-west-corner.lat</key>
         <long_name>Latitude of Northwest corner [North degree]</long_name>
-        <value>52</value>
+	<value>{{northwest_lat}}</value>
         <description>Set the latitude of Northwest corner for resizing the simulated domain. You can change the coordinate format when editing the value.</description>
         <format>lonlat</format>
         <default>0.0</default>
@@ -160,7 +178,7 @@
       <parameter>
         <key>north-west-corner.lon</key>
         <long_name>Longitude of Northwest corner [East degree]</long_name>
-        <value>-10</value>
+	<value>{{northwest_lon}}</value>
         <description>Set the longitude of Northwest corner for resizing the simulated domain. You can change the coordinate format when editing the value.</description>
         <format>lonlat</format>
         <default>0.0</default>
@@ -168,7 +186,7 @@
       <parameter>
         <key>south-east-corner.lat</key>
         <long_name>Latitude of Southeast corner [North degree]</long_name>
-        <value>50</value>
+	<value>{{southeast_lat}}</value>
         <description>Set the latitude of Southeast corner for resizing the simulated domain. You can change the coordinate format when editing the value.</description>
         <format>lonlat</format>
         <default>0.0</default>
@@ -176,7 +194,7 @@
       <parameter>
         <key>south-east-corner.lon</key>
         <long_name>Longitude of Southeast corner [East degree]</long_name>
-        <value>-8</value>
+	<value>{{southeast_lon}}</value>
         <description>Set the longitude of Southeast corner for resizing the simulated domain. You can change the coordinate format when editing the value.</description>
         <format>lonlat</format>
         <default>0.0</default>
@@ -307,89 +325,6 @@
         <default>org.previmer.ichthyop.dataset.Roms3dDataset</default>
         <format>class</format>
         <description>The Java class called by the application to implement this dataset.</description>
-      </parameter>
-    </parameters>
-  </block>
-  <block type="release">
-    <key>release.stain</key>
-    <tree_path>Main/Release stain</tree_path>
-    <description>Block of options for releasing a "stain" of particles aroung a given location.</description>
-    <enabled>true</enabled>
-    <parameters>
-      <parameter>
-        <key>number_particles</key>
-        <long_name>Number of particles</long_name>
-        <value>{{number_of_particles}}</value>
-        <default>1000</default>
-        <format>integer</format>
-        <description>Number of particles released in the stain. If several release events are defined (see section release schedule), this parameter becomes the number of particles released in the stain per release event. It means the application will total number_particles_released_in_zones * number_release_events particles.</description>
-      </parameter>
-      <parameter>
-        <key>lon_stain</key>
-        <long_name>Longitude [East degree]</long_name>
-        <value>{{longitude}}</value>
-        <default>17</default>
-        <format>lonlat</format>
-        <description>Longitude [East degree] of the stain. You can change the coordinate format when editing the value.</description>
-      </parameter>
-      <parameter>
-        <key>lat_stain</key>
-        <long_name>Latitude [North degree]</long_name>
-        <value>{{latitude}}</value>
-        <default>-33</default>
-        <format>lonlat</format>
-        <description>Latitude [North degree] of the stain. You can change the coordinate format when editing the value.</description>
-      </parameter>
-      <parameter>
-        <key>depth_stain</key>
-        <long_name>Depth [meter]</long_name>
-        <value>{{depth}}</value>
-        <default>-20.0</default>
-        <format>float</format>
-        <description>Depth [meter] of the stain. The parameter is ignored for 2D simulation. Positive depth is automatically converted by the application (depth = -depth)</description>
-      </parameter>
-      <parameter>
-        <key>radius_stain</key>
-        <long_name>Radius of the stain [meter]</long_name>
-        <value>{{radius}}</value>
-        <default>2000.0</default>
-        <format>float</format>
-        <description>Radius [meter] of the stain. Particles are randomly released (for homogeneous distribution) within the circle defined by this radius.</description>
-      </parameter>
-      <parameter>
-        <key>thickness_stain</key>
-        <long_name>Thickness of the stain [meter]</long_name>
-        <value>1.0</value>
-        <default>10.0</default>
-        <format>float</format>
-        <description>Thickness [meter] of the stain. This parameter is ignored for 2D simulation. Particles are randomly released within the layer [depth_stain - thickness / 2; depth_stain + thickness / 2]</description>
-      </parameter>
-      <parameter hidden="true">
-        <key>class_name</key>
-        <long_name>Java Class file</long_name>
-        <format>class</format>
-        <value>org.previmer.ichthyop.release.StainRelease</value>
-        <default>org.previmer.ichthyop.release.StainRelease</default>
-        <description>The Java class called by the application to implement this release process.</description>
-      </parameter>
-    </parameters>
-  </block>
-  <block type="option">
-    <tree_path>Advanced/Transport/General</tree_path>
-    <key>app.transport</key>
-    <description>Set the general transport options of the simulation.</description>
-    <parameters>
-      <parameter>
-        <key>coastline_behavior</key>
-        <long_name>Coastline behavior</long_name>
-        <value>Beaching</value>
-        <default>Beaching</default>
-        <format>combo</format>
-        <accepted>None</accepted>
-        <accepted>Beaching</accepted>
-        <accepted>Bouncing</accepted>
-        <accepted>Standstill</accepted>
-        <description>Determines what should be the behavior of a particle in case a move would take it inland : either it stands still, either it beaches, either it bounces on the coasline as a billiard ball.</description>
       </parameter>
     </parameters>
   </block>
@@ -554,6 +489,52 @@
     </parameters>
   </block>
   <block type="action">
+    <key>action.swimming</key>
+    <description>Block of options that control the random swimming process. Swimming velocities are provided in a CSV file as an age function of the particle.</description>
+    <tree_path>Advanced/Transport/Swimming</tree_path>
+    <enabled>false</enabled>
+    <parameters>
+      <parameter>
+        <key>velocity_file</key>
+        <long_name>Swimming velocity file</long_name>
+        <value />
+        <format>textfile</format>
+        <default />
+        <template>velocity_function.csv</template>
+        <description>Particle swimming velocity as an age function. The parameter is the pathname of CSV file (semicolon separator) that contains two columns. Headers Age(day);Velocity(m/s).</description>
+      </parameter>
+      <parameter>
+        <key>constant_velocity</key>
+        <long_name>Constant swiming velocity</long_name>
+        <value>true</value>
+        <default>true</default>
+        <format>boolean</format>
+        <description>If TRUE the particles will swim at the velocity defined in the CSV file. If FALSE the particles will swim with random velocity between zero and 2 times the velocity defined in the CSV file.</description>
+      </parameter>
+      <parameter hidden="true">
+        <key>class_name</key>
+        <long_name>Java Class file</long_name>
+        <value>org.previmer.ichthyop.action.SwimmingAction</value>
+        <default>org.previmer.ichthyop.action.SwimmingAction</default>
+        <format>class</format>
+        <description>The Java class called by the application to implement this action.</description>
+      </parameter>
+      <parameter hidden="true">
+        <key>priority</key>
+        <long_name>priority</long_name>
+        <value>normal</value>
+        <default>normal</default>
+        <format>combo</format>
+        <accepted>lowest</accepted>
+        <accepted>low</accepted>
+        <accepted>normal</accepted>
+        <accepted>high</accepted>
+        <accepted>highest</accepted>
+        <description>Level of priority of the action (comparatively to other actions). Each time step, a high priority action will be called by the application before than a low priority action. Actions with same level of priority will be called without any specific order.</description>
+      </parameter>
+    </parameters>
+  </block>
+  <block type="action">
     <key>action.migration</key>
     <description>Block of options to control the Diel Vertical Migration (DVM) process of larvae. Only operate for 3D simulation. We impose deterministic pattern in which organisms reside at different depths at daytime and night-time. User can choose the daytime depth and the night-time depth, in meters. If the growth procedure is activated then the DVM operates during the larvae stages (yolk-sac and feeding larva). If not it operates after a "minimum age". Setting the daytime depth equal to the night-time depth, the pattern forces the motion of particles at a constant depth.</description>
     <tree_path>Advanced/Transport/Vertical migration</tree_path>
@@ -568,12 +549,30 @@
         <description>Set the depth [meter] of the particle during daytime. Daytime period starts at sunrise and ends at sunset. Depth is negative number, but the application will automatically convert positive values multiplying by -1. You can set daytime depth = nightime depth to force motion of particle at constant depth.</description>
       </parameter>
       <parameter>
+        <key>daytime_depth_file</key>
+        <long_name>Depth at daytime as function of age</long_name>
+        <value />
+        <default>depth_day.csv</default>
+        <format>textfile</format>
+        <template>depth_function.csv</template>
+        <description>Depth at day time as a function of age. The parameter is the pathname of CSV file (semicolon separator) that contains two columns. Headers Age(day);Depth(metre). Depth is negative number. If this parameter is left void, ichthyop assumes constant daytime depth, defined by parameter "Depth at daytime".</description>
+      </parameter>
+      <parameter>
         <key>nighttime_depth</key>
         <long_name>Depth at nighttime [meter]</long_name>
         <value>-10</value>
         <default>-10</default>
         <format>float</format>
         <description>Set the depth [meter] of the particle during nighttime. Nighttime. period starts at sunset and ends at sunrise. Depth is negative number, but the application will automatically convert positive values multiplying by -1. You can set daytime depth = nightime depth to force motion of particle at constant depth.</description>
+      </parameter>
+      <parameter>
+        <key>nighttime_depth_file</key>
+        <long_name>Depth at nighttime as function of age</long_name>
+        <value />
+        <default>depth_night.csv</default>
+        <format>textfile</format>
+        <template>depth_function.csv</template>
+        <description>Depth at night as a function of age. The parameter is the pathname of CSV file (semicolon separator) that contains two columns. Headers Age(day);Depth(metre). Depth is negative number. If this parameter is left void, ichthyop assumes constant nighttime depth, defined by parameter "Depth at nighttime".</description>
       </parameter>
       <parameter>
         <key>sunrise</key>
@@ -623,6 +622,43 @@
     </parameters>
   </block>
   <block type="action">
+    <key>action.migration.ontogenetic</key>
+    <description>Block of options to control the Ontogenetic Vertical Migration (OVM) process of larvae. Only operate for 3D simulation. Based on CMS.</description>
+    <tree_path>Advanced/Transport/Ontogenetic migration</tree_path>
+    <enabled>false</enabled>
+    <parameters>
+      <parameter>
+        <key>cms_ovm_config_file</key>
+        <long_name>Path of the CMS Ontogenetic migration configuration file</long_name>
+        <value />
+        <default />
+        <format>file</format>
+        <description>Select the CSM Ontogenetic migration configuration file.</description>
+      </parameter>
+      <parameter hidden="true">
+        <key>class_name</key>
+        <long_name>Java Class file</long_name>
+        <value>org.previmer.ichthyop.action.OntogeneticMigrationAction</value>
+        <default>org.previmer.ichthyop.action.ntogeneticMigrationAction</default>
+        <format>class</format>
+        <description>The Java class called by the application to implement this action.</description>
+      </parameter>
+      <parameter hidden="true">
+        <key>priority</key>
+        <long_name>priority</long_name>
+        <value>normal</value>
+        <default>normal</default>
+        <format>combo</format>
+        <accepted>lowest</accepted>
+        <accepted>low</accepted>
+        <accepted>normal</accepted>
+        <accepted>high</accepted>
+        <accepted>highest</accepted>
+        <description>Level of priority of the action (comparatively to other actions). Each time step, a high priority action will be called by the application before than a low priority action. Actions with same level of priority will be called without any specific order.</description>
+      </parameter>
+    </parameters>
+  </block>
+  <block type="action">
     <key>action.wind</key>
     <tree_path>Advanced/Transport/Wind drift</tree_path>
     <enabled>false</enabled>
@@ -631,7 +667,7 @@
       <parameter>
         <key>wind_file</key>
         <long_name>Wind scenario file</long_name>
-        <value>cfg/benguela_wind-scenario.txt</value>
+        <value>H:\modelling\SEARCHandRESCUE\ICHTHYOP\INPUT\connemara\20171122\wtest_05.txt</value>
         <default>cfg/my_wind-scenario.txt</default>
         <format>textfile</format>
         <template>wind-benguela.txt</template>
@@ -676,7 +712,7 @@
       <parameter>
         <key>events</key>
         <long_name>Release event(s)</long_name>
-        <value>"year 01 month 05 day 03 at 00:00" "year 01 month 05 day 03 at 00:00"</value>
+	<value></value>
         <default />
         <format>list</format>
         <description>Set the dates [year #### month ## day ## at HH:mm] of the release events. You can define as much events as necessary. Just make sure that: 1. the first release events does not occur before the beginning of the simulation, 2. events are defined in chronological order.</description>
@@ -692,7 +728,7 @@
       <parameter>
         <key>number_particles</key>
         <long_name>Number of particles</long_name>
-        <value>1000</value>
+        <value>{{number_of_particles}}</value>
         <default>1000</default>
         <format>integer</format>
         <description>Number of particles released in the zones. The application randomly releases the particles within the zones in order to ensure a homogeneous distribution (= constant concentration of particles among the zones). The downside is that you do not control the number of particles released per zone. If several release events are defined (see section release schedule), this parameter becomes the number of particles released in the zones per release event. It means the application will total number_particles_released_in_zones * number_release_events particles.</description>
@@ -878,34 +914,67 @@
       </parameter>
     </parameters>
   </block>
-  <block type="option">
-    <key>app.particle_length</key>
-    <tree_path>Advanced/Biology/Early-life stages</tree_path>
-    <description>Block of options for setting up particle's early-life stages. The pre-defined early life stages are egg, yolk-sac larva and feeding larva. Particles change stages at pre-defined length thresholds that can be adjusted in this block.</description>
+  <block type="release">
+    <key>release.stain</key>
+    <tree_path>Main/Release stain</tree_path>
+    <description>Block of options for releasing a "stain" of particles aroung a given location.</description>
+    <enabled>true</enabled>
     <parameters>
       <parameter>
-        <key>initial_length</key>
-        <long_name>Initial length [millimeter]</long_name>
-        <value>0.025</value>
-        <default>0.025</default>
-        <format>float</format>
-        <description>Initial length [millimeter] of the egg.</description>
+        <key>number_particles</key>
+        <long_name>Number of particles</long_name>
+        <value>{{number_of_particles}}</value>
+        <default>1000</default>
+        <format>integer</format>
+        <description>Number of particles released in the stain. If several release events are defined (see section release schedule), this parameter becomes the number of particles released in the stain per release event. It means the application will total number_particles_released_in_zones * number_release_events particles.</description>
       </parameter>
       <parameter>
-        <key>hatch_length</key>
-        <long_name>Hatch length [millimeter]</long_name>
-        <value>2.8</value>
-        <default>2.8</default>
-        <format>float</format>
-        <description>Threshold length [millimeter] between egg and yolk-sac larva.</description>
+        <key>lon_stain</key>
+        <long_name>Longitude [East degree]</long_name>
+        <value>{{longitude}}</value>
+        <default>17</default>
+        <format>lonlat</format>
+        <description>Longitude [East degree] of the stain. You can change the coordinate format when editing the value.</description>
       </parameter>
       <parameter>
-        <key>yolk2feeding_length</key>
-        <long_name>Yolk-sac to feeding larva threshold [millimeter]</long_name>
-        <value>4.5</value>
-        <default>4.5</default>
+        <key>lat_stain</key>
+        <long_name>Latitude [North degree]</long_name>
+        <value>{{latitude}}</value>
+        <default>-33</default>
+        <format>lonlat</format>
+        <description>Latitude [North degree] of the stain. You can change the coordinate format when editing the value.</description>
+      </parameter>
+      <parameter>
+        <key>depth_stain</key>
+        <long_name>Depth [meter]</long_name>
+        <value>{{depth}}</value>
+        <default>-20.0</default>
         <format>float</format>
-        <description>Threshold length [millimeter] between yolk-sac larva and feeding larva.</description>
+        <description>Depth [meter] of the stain. The parameter is ignored for 2D simulation. Positive depth is automatically converted by the application (depth = -depth)</description>
+      </parameter>
+      <parameter>
+        <key>radius_stain</key>
+        <long_name>Radius of the stain [meter]</long_name>
+        <value>{{radius}}</value>
+        <default>2000.0</default>
+        <format>float</format>
+        <description>Radius [meter] of the stain. Particles are randomly released (for homogeneous distribution) within the circle defined by this radius.</description>
+      </parameter>
+      <parameter>
+        <key>thickness_stain</key>
+        <long_name>Thickness of the stain [meter]</long_name>
+	<value>{{thickness}}</value>
+        <default>10.0</default>
+        <format>float</format>
+        <description>Thickness [meter] of the stain. This parameter is ignored for 2D simulation. Particles are randomly released within the layer [depth_stain - thickness / 2; depth_stain + thickness / 2]</description>
+      </parameter>
+      <parameter hidden="true">
+        <key>class_name</key>
+        <long_name>Java Class file</long_name>
+        <format>class</format>
+        <value>org.previmer.ichthyop.release.StainRelease</value>
+        <default>org.previmer.ichthyop.release.StainRelease</default>
+        <description>The Java class called by the application to implement this release process.</description>
       </parameter>
     </parameters>
   </block>
@@ -1025,6 +1094,22 @@
         <description>Threshold temperature [Celsius degree] for the sea water. It ensures that the particles keep growing with a minimum rate, though they are facing colder sea water.</description>
       </parameter>
       <parameter>
+        <key>stage_tags</key>
+        <long_name>Tags of the stages</long_name>
+        <value>"egg" "yolk-sac larva" "feeding larva"</value>
+        <default>"egg" "yolk-sac" "feeding"</default>
+        <format>list</format>
+        <description>Names of each physiological stage of the larva life history. No matter what you set, Ichthyop assumes that the first stage corresponds to egg stage.</description>
+      </parameter>
+      <parameter>
+        <key>stage_thresholds</key>
+        <long_name>Initial length of the stages [millimetre]</long_name>
+        <value>"0.025" "2.8" "4.5"</value>
+        <default>"0.025" "2.8" "4.5"</default>
+        <format>list</format>
+        <description>Initial length for each physiological stage of the larva life history, in millimetre. Ichthyop assumes that the first length provided corresponds to the egg length.</description>
+      </parameter>
+      <parameter>
         <key>temperature_field</key>
         <long_name>Temperature variable name</long_name>
         <value>temp</value>
@@ -1071,6 +1156,74 @@
     </parameters>
   </block>
   <block type="action">
+    <key>action.growth.sole</key>
+    <tree_path>Advanced/Biology/Solea growth</tree_path>
+    <enabled>false</enabled>
+    <description>Block of options for setting up the growth model of Sole larvae. It simulates the growth in length of particles as a function of water temperature. Length increases with time length(t + dt) = length(t) + c1 * (temperature ^ c2) * dt, c1 and c2 depending on the stage of the larvae</description>
+    <parameters>
+      <parameter>
+        <key>temperature_field</key>
+        <long_name>Temperature variable name</long_name>
+        <value>temp</value>
+        <default>temp</default>
+        <description>The name of the temperature variable (case sensitive) in the hydrodynamic dataset.</description>
+      </parameter>
+      <parameter>
+        <key>stage_tags</key>
+        <long_name>Tags of the stages</long_name>
+        <value>"egg" "yolk-sac larva" "feeding larva" "metamorphosing larva"</value>
+        <default>"egg" "yolk-sac larva" "feeding larva" "metamorphosing larva"</default>
+        <format>list</format>
+        <description>Names of each physiological stage of the larva life history. No matter what you set, Ichthyop assumes that the first stage corresponds to egg stage.</description>
+      </parameter>
+      <parameter>
+        <key>stage_thresholds</key>
+        <long_name>Initial length of the stages [millimetre]</long_name>
+        <value>"1.2" "3" "4" "8"</value>
+        <default>"1.2" "3" "4" "8"</default>
+        <format>list</format>
+        <description>Initial length for each physiological stage of the larva life history, in millimetre. Ichthyop assumes that the first length provided corresponds to the egg length.</description>
+      </parameter>
+      <parameter>
+        <key>c1</key>
+        <long_name>First coeff of the growth equation</long_name>
+        <value>"0.0066" "0.0073" "0.0011" "0.0017"</value>
+        <default>"0.0066" "0.0073" "0.0011" "0.0017"</default>
+        <format>list</format>
+        <description>First coefficient of the sole growth equation, c1, such as dLength(dt) = c1 * (temperature ^ c2) * dt</description>
+      </parameter>
+      <parameter>
+        <key>c2</key>
+        <long_name>Second coeff of the growth equation</long_name>
+        <value>"1.5739" "1.4619" "1.9316" "1.9316"</value>
+        <default>"1.5739" "1.4619" "1.9316" "1.9316"</default>
+        <format>list</format>
+        <description>Second coefficient of the sole growth equation, c2, such as dLength(dt) = c1 * (temperature ^ c2) * dt</description>
+      </parameter>
+      <parameter hidden="true">
+        <key>class_name</key>
+        <long_name>Java Class file</long_name>
+        <value>org.previmer.ichthyop.action.SoleGrowthAction</value>
+        <default>org.previmer.ichthyop.action.SoleGrowthAction</default>
+        <format>class</format>
+        <description>The Java class called by the application to implement this action.</description>
+      </parameter>
+      <parameter hidden="true">
+        <key>priority</key>
+        <long_name>priority</long_name>
+        <value>low</value>
+        <default>low</default>
+        <format>combo</format>
+        <accepted>lowest</accepted>
+        <accepted>low</accepted>
+        <accepted>normal</accepted>
+        <accepted>high</accepted>
+        <accepted>highest</accepted>
+        <description>Level of priority of the action (comparatively to other actions). Each time step, a high priority action will be called by the application before than a low priority action. Actions with same level of priority will be called without any specific order.</description>
+      </parameter>
+    </parameters>
+  </block>
+  <block type="action">
     <key>action.recruitment.zone</key>
     <tree_path>Advanced/Biology/Recruitment/In zones</tree_path>
     <enabled>false</enabled>
@@ -1098,7 +1251,7 @@
       <parameter>
         <key>limit_length</key>
         <long_name>Recruitment limit length [millimeter]</long_name>
-        <value>6.0</value>
+        <value>0</value>
         <default>6.0</default>
         <format>float</format>
         <description>A particle must be "bigger" than the specified length [millimeter] to be considered as recruitable. This parameter is ignored if the recruitment criterion is based on the particle age. Only use this criterion if the growth model is activated.</description>
@@ -1195,7 +1348,7 @@
       <parameter>
         <key>limit_length</key>
         <long_name>Recruitment limit length [millimeter]</long_name>
-        <value>0</value>
+        <value>6.0</value>
         <default>6.0</default>
         <format>float</format>
         <description>A particle must be "bigger" than the specified length [millimeter] to be considered as recruitable. This parameter is ignored if the recruitment criterion is based on the particle age. Only use this criterion if the growth model is activated.</description>
@@ -1317,5 +1470,5 @@
       </parameter>
     </parameters>
   </block>
+  <version date="2017/03/23">3.3</version>
 </icstructure>
-

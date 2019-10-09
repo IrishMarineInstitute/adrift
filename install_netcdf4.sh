@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Script to install hdf5 and netCDF4 libraries on a Linux Ubuntu system
 # After: https://code.google.com/p/netcdf4-python/wiki/UbuntuInstall
@@ -8,11 +9,12 @@
 # ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4/
 # and other sources
 
-BASHRC="~/.bashrc"
+BASHRC="/root/.bashrc"
 
 # Install zlib
 v=1.2.8  
-wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4/zlib-${v}.tar.gz
+#wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4/zlib-${v}.tar.gz
+wget https://zlib.net/fossils/zlib-${v}.tar.gz
 tar -xf zlib-${v}.tar.gz && cd zlib-${v}
 ./configure --prefix=/usr/local
 #make check install
@@ -20,8 +22,11 @@ make install
 cd ..
 
 # Install HDF5
-v=1.8.13
-wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4/hdf5-${v}.tar.gz
+mv=1.8
+v=1.8.21
+# wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4/hdf5-${v}.tar.gz
+#wget http://www.unidata.ucar.edu/downloads/netcdf/hdf5-${v}.tar.gz
+wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-${mv}/hdf5-${v}/src/hdf5-${v}.tar.gz
 tar -xf hdf5-${v}.tar.gz && cd hdf5-${v}
 prefix="/usr/local/hdf5-$v"
 if [ $HDF5_DIR != $prefix ]; then
@@ -34,13 +39,16 @@ fi
 make -j 2 # 2 for number of procs to be used
 make install
 cd ..
+ldconfig
 
 # Install Netcdf
-v=4.1.3
-wget --no-check-certificate http://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-${v}.tar.gz
-tar -xf netcdf-${v}.tar.gz && cd netcdf-${v}
+#v=4.6.2
+v=4.7.1
+#wget --no-check-certificate https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-c-${v}.tar.gz
+wget --no-check-certificate https://128.117.149.20/downloads/netcdf/ftp/netcdf-c-${v}.tar.gz
+tar -xf netcdf-c-${v}.tar.gz && cd netcdf-c-${v}
 prefix="/usr/local/"
-if [ $NETCDF4_DIR != $prefix ]; then
+if [ "!$NETCDF4_DIR" != "$prefix" ]; then
     echo "Add NETCDF4_DIR=$prefix to .bashrc"
     echo "" >> $BASHRC
     echo "# NETCDF4 libraries for python" >> $BASHRC

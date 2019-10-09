@@ -2,7 +2,7 @@
 Project for connecting java-based particle transport models to modern web visualisations
 
 # installation
-Before installing, download [ichthyop-3.2.zip](http://www.ichthyop.org/) into the folder.
+Before installing, download [ichthyop-3.3.3.zip](http://www.ichthyop.org/) into the folder.
 
 # nfs mount
 Connect ROMS output to the host server.
@@ -15,7 +15,7 @@ Connect ROMS output to the host server.
 5. restart autofs: /etc/init.d/autofs restart
 
 ```bash
-docker build -t adrift .
+docker build -t 127.0.0.1:5000/adrift .
 ```
 
 # fetching some model data data files from the main demo server
@@ -38,3 +38,6 @@ docker run -d --restart=always \
 
 Running in docker-compose also check the docs to create the [htaccess password file](https://github.com/jwilder/nginx-proxy#basic-authentication-support)
 
+
+# docker swarm
+```docker service create --name adrift --label traefik.port=5000 --label traefik.domain=dm.marine.ie --network traefik-net --mount type=bind,src=/opt/adrift/output,dst=/output --mount type=bind,src=/opt/thredds/connemara_his/,dst=/input/connemara_his --constraint node.hostname=="dmdock04" 127.0.0.1:5000/adrift:latest ```
