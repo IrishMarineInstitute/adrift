@@ -12,9 +12,11 @@
 <script src="/static/js/juration.js"></script>
 <script src="/static/js/iso8601.js"></script>
 <script src="/static/js/bootstrap-slider.min.js"></script>
+<script src="static/js/bootstrap-datetimepicker.min.js"></script>
 <script src="/static/js/leaflet.js"></script>
 <link rel="stylesheet" href="/static/css/bootstrap.min.css">
 <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
+<link rel="stylesheet" href="static/css/bootstrap-datetimepicker.min.css">
 <link rel="stylesheet" href="/static/css/Leaflet.Coordinates-0.1.5.css" />
 <script type="text/javascript" src="/static/js/Leaflet.Coordinates-0.1.5.min.js"></script>
 <style>
@@ -65,8 +67,7 @@ var format_date = function(d){
 
 var picker_date_format = "MMM DD h:mm A"
 
-var update_dates = function(){
-   var startdate = chrono.parseDate($("#start_time_picker").val());
+var _update_dates = function(startdate){
    if(startdate == null){
       $("#start_time_label").text("Unrecognised start time");
    }else{
@@ -95,6 +96,9 @@ var update_dates = function(){
    }catch(e){
      $("#end_time_label").text("Unrecognised duration");
    }
+}
+var update_dates = function(){
+   _update_dates(chrono.parseDate($("#start_time_picker").val()));
 };
 $(document).ready(function(){
    $("#radius").slider({
@@ -106,6 +110,29 @@ $(document).ready(function(){
 
    $("#start_time_picker").on("change",update_dates);
    $("#duration").on("change",update_dates);
+   $("#switchcalendar").on("click",function(){
+    $("#datetimepicker0").addClass('hidden');
+    $("#datetimepicker1").removeClass('hidden');
+       $('#datetimepicker2').datetimepicker({
+                format: "YYYY-MM-DD HH:mm",
+                inline: true,
+                sideBySide: true,
+                defaultDate:  $("#start_time").val(),
+                minDate: min_date,
+                maxDate: max_date
+            });
+
+       $('#datetimepicker2').on('dp.change',function(e){
+        $("#start_time_picker").val(e.date.format(picker_date_format));
+        _update_dates(e.date.toDate());
+
+       });
+
+   });
+   $("#cancelcalendar").on("click",function(){
+        $("#datetimepicker1").addClass('hidden');
+      $("#datetimepicker0").removeClass('hidden');
+   });
    update_dates();
    create_map();
    $("#project_name").focus();
@@ -121,7 +148,7 @@ $(document).ready(function(){
 <form id="new_project_form" method="post" action="/api/model/{{model}}/projection">
   <h4>Enter New Project Start Location <small>or drag marker</small></h4>
   <div class="row">
-   <div class="col-md-4">
+   <div class="col-md-6">
      <div class="form-group">
        <label class="control-label">Latitude</label>
        <input class="form-control" required type="number" size="20" min="{{latitude_min}}" max="{{latitude_max}}" step="any" id="latitude" name="latitude" value="{{latitude}}" >
@@ -132,7 +159,19 @@ $(document).ready(function(){
      </div>
   <div class="form-group">
     <label class="control-label">Start Time</label>
-    <input class="form-control" required id="start_time_picker" value="Yesterday at 10:45pm" name="start_time_picker" size="20" type="text" >
+    <div class='input-group date' id='datetimepicker0'>
+      <input class="form-control" required id="start_time_picker" value="Yesterday at 10:45pm" name="start_time_picker" size="20" type="text" >
+      <span class="input-group-addon">
+      <span class="glyphicon glyphicon-calendar" id="switchcalendar"></span>
+      </span>
+    </div>
+    <div class='input-group date hidden' id='datetimepicker1'>
+        <div class='date' id='datetimepicker2'>
+        </div>
+          <span class="input-group-addon">
+            <span class="glyphicon glyphicon-pencil" id="cancelcalendar"></span>
+          </span>
+    </div>
     <input type="hidden" id="start_time" name="start_time" value="{{date_min}}">
   </div>
   <div class="form-group">
@@ -156,7 +195,7 @@ $(document).ready(function(){
       <a href="/" class="btn btn-default">Cancel</a>
      </div>
    </div>
-   <div class="col-md-8">
+   <div class="col-md-6">
      <div id="map"></div>
    </div>
   </div>
