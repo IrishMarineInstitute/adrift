@@ -2,6 +2,7 @@
   "connemara_his": {
     "id": "connemara_his", 
     "name": "Galway Bay",
+    "shrink_domain": false,
     "defaults": {
          "latitude": 53.256302,
 	 "longitude": -9.005189,
@@ -9,6 +10,26 @@
 	 "northwest_lon": -10,
 	 "southeast_lat": 50,
 	 "southeast_lon": -8,
+	 "thickness": 2
+    },
+    "variables": {
+	 "latitude": "lat_u",
+	 "longitude": "lon_u",
+	 "time": "ocean_time"
+    }
+  },
+  "neatl": {
+    "id": "neatl", 
+    "name": "North East Atlantic",
+    "opendap_url": "http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/NEATLANTIC_NATIVE_2KM_40L_1H/AGGREGATE",
+    "shrink_domain": true,
+    "defaults": {
+     "latitude": 53.256302,
+	 "longitude": -9.005189,
+	 "northwest_lat": 55.93994277329417,
+	 "northwest_lon": -30.703775397322918,
+	 "southeast_lat": 44.714843333133715,
+	 "southeast_lon": -5.613853054176213,
 	 "thickness": 2
     },
     "variables": {

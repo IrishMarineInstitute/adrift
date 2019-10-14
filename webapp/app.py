@@ -103,23 +103,29 @@ def _range(model):
   var_time = md['variables']['time']
   var_lat = md['variables']['latitude']
   var_lon = md['variables']['longitude']
-  pattern = '/input/{0}/*.nc'.format(model)
-  fnames = glob.glob(pattern)
-  fnames.sort()
-  if len(fnames) == 0:
-     print("no files found matching {0}".format(pattern), file=sys.stderr)
-     abort(412)
-  cdfa = netCDF4.MFDataset(fnames[0],aggdim=var_time)
-  cdfz = netCDF4.MFDataset(fnames[-1],aggdim=var_time)
-  start_time = netCDF4.num2date(cdfa.variables[var_time][:],cdfa.variables[var_time].units)[0]
-  end_time = netCDF4.num2date(cdfz.variables[var_time][:],cdfz.variables[var_time].units)[-1]
+  if "opendap_url" in md:
+    cdfa = netcdf4.Dataset(md["opendap_url"])
+    cdfz = cdfa
+  else:
+    pattern = '/input/{0}/*.nc'.format(model)
+    fnames = glob.glob(pattern)
+    fnames.sort()
+    if len(fnames) == 0:
+       print("no files found matching {0}".format(pattern), file=sys.stderr)
+       abort(412)
+    cdfa = netCDF4.MFDataset(fnames[0],aggdim=var_time)
+    cdfz = netCDF4.MFDataset(fnames[-1],aggdim=var_time)
+
+  start_time = netCDF4.num2date(cdfa.variables[var_time].min(),cdfa.variables[var_time].units)
+  end_time = netCDF4.num2date(cdfz.variables[var_time].max(),cdfz.variables[var_time].units)
   
   time_min = "{0}Z".format(start_time).replace(" ","T")
   time_max = "{0}Z".format(end_time).replace(" ","T")
-  lat_min = float(np.min(cdfa.variables[var_lat][:]))
-  lat_max = float(np.max(cdfa.variables[var_lat][:]))
-  lon_min = float(np.min(cdfa.variables[var_lon][:]))
-  lon_max = float(np.max(cdfa.variables[var_lon][:]))
+  # TODO: fix these to work also on 2d model...
+  lat_min = float(cdfa.variables[var_lat][0][0])
+  lat_max = float(cdfa.variables[var_lat][-1][-1])
+  lon_min = float(cdfa.variables[var_lon][0][0])
+  lon_max = float(cdfa.variables[var_lon][-1][-1])
   return (time_min,time_max,lat_min,lat_max,lon_min,lon_max)
 
 @app.route('/api/projects')
