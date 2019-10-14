@@ -22,7 +22,7 @@ socketio = SocketIO(app)
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', models=_models().values())
 
 def _models():
   with open("models.json") as f:
