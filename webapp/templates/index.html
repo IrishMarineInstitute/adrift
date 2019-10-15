@@ -96,9 +96,9 @@ $(document).ready(function(){
   <div class="form-group">
     <label class="control-label">Model</label>
     <select id="model" name="model" class="form-control">
-      {{#each models}}
-      <option value="{{id}}">{{name}}</option>
-      {{/each}}
+      {% for model in models %}
+      <option value="{{ model['id'] }}">{{ model['name'] }}</option>
+      {% endfor %}
     </select>
   </div>
   <div class="form-group">

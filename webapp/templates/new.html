@@ -12,15 +12,15 @@
 <script src="/static/js/juration.js"></script>
 <script src="/static/js/iso8601.js"></script>
 <script src="/static/js/bootstrap-slider.min.js"></script>
-<script src="static/js/bootstrap-datetimepicker.min.js"></script>
+<script src="/static/js/bootstrap-datetimepicker.min.js"></script>
 <script src="/static/js/leaflet.js"></script>
-{{#shrink_domain}}
-<script src="static/js/leaflet.js"></script>
-<script src="static/js/leaflet-areaselect.js"></script>
-{{/shrink_domain}}
+{% if shrink_domain %}
+<link rel="stylesheet" href="/static/css/leaflet-areaselect.css" />
+<script src="/static/js/leaflet-areaselect.js"></script>
+{% endif %}
 <link rel="stylesheet" href="/static/css/bootstrap.min.css">
 <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css">
-<link rel="stylesheet" href="static/css/bootstrap-datetimepicker.min.css">
+<link rel="stylesheet" href="/static/css/bootstrap-datetimepicker.min.css">
 <link rel="stylesheet" href="/static/css/Leaflet.Coordinates-0.1.5.css" />
 <script type="text/javascript" src="/static/js/Leaflet.Coordinates-0.1.5.min.js"></script>
 <style>
@@ -63,12 +63,14 @@ var create_map = function(){
    });
   $("#latitude").change(update_marker_location);
   $("#longitude").change(update_marker_location);
-    {{#shrink_domain}}
+   {% if shrink_domain %}
     var setShrinkDomain = function(bounds){
-       $("#northwest_lat").val(bounds._northEast.lat);
-       $("#northwest_lon").val(bounds._southWest.lon);
-       $("#southeast_lat").val(bounds._southWest.lat);
-       $("#southeast_lon").val(bounds._northEast.lon);
+	    var northwest = bounds.getNorthWest();
+	    var southeast = bounds.getSouthEast();
+       $("#northwest_lat").val(northwest.lat);
+       $("#northwest_lon").val(northwest.lng);
+       $("#southeast_lat").val(southeast.lat);
+       $("#southeast_lon").val(southeast.lng);
     }
     var areaSelect = L.areaSelect({width:map.getSize().x - 20, height: map.getSize().y - 20});
     areaSelect.on("change", function() {
@@ -76,7 +78,7 @@ var create_map = function(){
     });
     areaSelect.addTo(map);
     setShrinkDomain(areaSelect.getBounds());
-    {{/shrink_domain}}
+   {% endif %}
 };
 
 var format_date = function(d){
@@ -169,11 +171,17 @@ $(document).ready(function(){
    <div class="col-md-6">
      <div class="form-group">
        <label class="control-label">Latitude</label>
+       <!--
        <input class="form-control" required type="number" size="20" min="{{latitude_min}}" max="{{latitude_max}}" step="any" id="latitude" name="latitude" value="{{latitude}}" >
+       -->
+       <input class="form-control" required type="number" size="20" step="any" id="latitude" name="latitude" value="{{latitude}}" >
      </div>
      <div class="form-group">
        <label class="control-label">Longitude</label>
+       <!--
        <input class="form-control" required type="number" size="20" min="{{longitude_min}}" max="{{longitude_max}}" step="any" id="longitude" name="longitude" value="{{longitude}}" >
+       -->
+       <input class="form-control" required type="number" size="20" step="any" id="longitude" name="longitude" value="{{longitude}}" >
      </div>
   <div class="form-group">
     <label class="control-label">Start Time</label>
@@ -217,12 +225,12 @@ $(document).ready(function(){
      <div id="map"></div>
    </div>
   </div>
-  {{#shrink_domain}}
+  {% if shrink_domain %}
   <input type="hidden" name="northwest_lat" id="northwest_lat" value="">
   <input type="hidden" name="northwest_lon" id="northwest_lon" value="">
   <input type="hidden" name="southeast_lat" id="southeast_lat" value="">
   <input type="hidden" name="southeast_lon" id="southeast_lon" value="">
-  {{/shrink_domain}}
+  {% endif %}
 </form>
 </div>
 </div>

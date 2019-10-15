@@ -1,7 +1,7 @@
 {
   "connemara_his": {
     "id": "connemara_his", 
-    "name": "Galway Bay",
+    "name": "Connemara",
     "shrink_domain": false,
     "defaults": {
          "latitude": 53.256302,
@@ -26,10 +26,10 @@
     "defaults": {
      "latitude": 53.256302,
 	 "longitude": -9.005189,
-	 "northwest_lat": 55.93994277329417,
-	 "northwest_lon": -30.703775397322918,
-	 "southeast_lat": 44.714843333133715,
-	 "southeast_lon": -5.613853054176213,
+	 "northwest_lat": 57.9,
+	 "northwest_lon": -17.9,
+	 "southeast_lat": 48.1,
+	 "southeast_lon": -1.1,
 	 "thickness": 2
     },
     "variables": {

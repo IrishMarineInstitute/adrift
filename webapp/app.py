@@ -22,7 +22,9 @@ socketio = SocketIO(app)
 
 @app.route('/')
 def index():
-    return render_template('index.html', models=_models().values())
+    models = sorted([model for key, model in _models().items()],
+            key=lambda x: x['name'])
+    return render_template('index.html', models=models)
 
 def _models():
   with open("models.json") as f:
@@ -84,7 +86,8 @@ def show_new():
              longitude_max = lon_max,
              date_min = time_min,
              date_max = time_max,
-             longitude=info["defaults"]["longitude"])
+             longitude=info["defaults"]["longitude"],
+             shrink_domain=info["shrink_domain"])
 
 @app.route('/project/<path:project>/')
 def show_status(project):
@@ -104,7 +107,7 @@ def _range(model):
   var_lat = md['variables']['latitude']
   var_lon = md['variables']['longitude']
   if "opendap_url" in md:
-    cdfa = netcdf4.Dataset(md["opendap_url"])
+    cdfa = netCDF4.Dataset(md["opendap_url"])
     cdfz = cdfa
   else:
     pattern = '/input/{0}/*.nc'.format(model)
@@ -116,8 +119,8 @@ def _range(model):
     cdfa = netCDF4.MFDataset(fnames[0],aggdim=var_time)
     cdfz = netCDF4.MFDataset(fnames[-1],aggdim=var_time)
 
-  start_time = netCDF4.num2date(cdfa.variables[var_time].min(),cdfa.variables[var_time].units)
-  end_time = netCDF4.num2date(cdfz.variables[var_time].max(),cdfz.variables[var_time].units)
+  start_time = netCDF4.num2date(cdfa.variables[var_time][0],cdfa.variables[var_time].units)
+  end_time = netCDF4.num2date(cdfz.variables[var_time][-1],cdfz.variables[var_time].units)
   
   time_min = "{0}Z".format(start_time).replace(" ","T")
   time_max = "{0}Z".format(end_time).replace(" ","T")
@@ -171,6 +174,10 @@ def projection(model):
   number_of_particles = int(request.values.get('number_of_particles','1000'))
   radius = float(request.values.get('radius','250'))
   depth = float(request.values.get('depth','0'))
+  northwest_lat = float(request.values.get('northwest_lat',defaults['northwest_lat']))
+  northwest_lon = float(request.values.get('northwest_lon',defaults['northwest_lon']))
+  southeast_lat = float(request.values.get('southeast_lat',defaults['southeast_lat']))
+  southeast_lon = float(request.values.get('southeast_lon',defaults['southeast_lon']))
   #Set the beginning date and time of the simulation. Format: year #### month ## day ## at HH:mm.
   beginning = start_release_time.strftime("year %Y month %m day %d at %H:%M.")
   #Set the duration of particle transport. Format: #### day(s) ## hour(s) ## minute(s)
@@ -193,9 +200,17 @@ def projection(model):
            'number_of_particles': number_of_particles,
            'depth': depth,
            'radius': radius,
-           'model': model
+           'model': model,
+           'northwest_lat': northwest_lat,
+           'northwest_lon': northwest_lon,
+           'southeast_lat': southeast_lat,
+           'southeast_lon': southeast_lon
    }
   context = {**defaults, **updates}
+  for key in ["opendap_url", "shrink_domain"]:
+      if key in metadata[model]:
+          context[key] = metadata[model][key]
+
   to_hash["context"] = context
   hash = hashlib.sha224(json.dumps(to_hash,sort_keys=True).encode('utf-8')).hexdigest()
   output_file_prefix = "{0}_{1}".format(model,hash)
