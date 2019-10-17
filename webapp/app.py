@@ -76,7 +76,7 @@ def show_new():
     if not model in metadata:
       return redirect("/")
     info = metadata[model]
-    (time_min,time_max,lat_min,lat_max,lon_min,lon_max) = _range(model)
+    (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon) = _range(model)
     return render_template('new.html',
              model=model,
              latitude=info["defaults"]["latitude"],
@@ -87,7 +87,8 @@ def show_new():
              date_min = time_min,
              date_max = time_max,
              longitude=info["defaults"]["longitude"],
-             shrink_domain=info["shrink_domain"])
+             shrink_domain=info["shrink_domain"],
+             polygon=json.dumps([list(p) for p in polygon]))
 
 @app.route('/project/<path:project>/')
 def show_status(project):
@@ -125,11 +126,20 @@ def _range(model):
   time_min = "{0}Z".format(start_time).replace(" ","T")
   time_max = "{0}Z".format(end_time).replace(" ","T")
   # TODO: fix these to work also on 2d model...
-  lat_min = float(cdfa.variables[var_lat][0][0])
-  lat_max = float(cdfa.variables[var_lat][-1][-1])
-  lon_min = float(cdfa.variables[var_lon][0][0])
-  lon_max = float(cdfa.variables[var_lon][-1][-1])
-  return (time_min,time_max,lat_min,lat_max,lon_min,lon_max)
+  lat_min = float(cdfa.variables[var_lat][:][:].min())
+  lat_max = float(cdfa.variables[var_lat][:][:].max())
+  lon_min = float(cdfa.variables[var_lon][:][:].min())
+  lon_max = float(cdfa.variables[var_lon][:][:].max())
+  lat1 = float(cdfa.variables[var_lat][0][0])
+  lat2 = float(cdfa.variables[var_lat][0][-1])
+  lat3 = float(cdfa.variables[var_lat][-1][-1])
+  lat4 = float(cdfa.variables[var_lat][-1][0])
+  lon1 = float(cdfa.variables[var_lon][0][0])
+  lon2 = float(cdfa.variables[var_lon][0][-1])
+  lon3 = float(cdfa.variables[var_lon][-1][-1])
+  lon4 = float(cdfa.variables[var_lon][-1][0])
+  polygon = [[lat1,lon1],[lat2,lon2],[lat3,lon3],[lat4,lon4]]
+  return (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon)
 
 @app.route('/api/projects')
 def list_projects():
@@ -143,13 +153,14 @@ def list_projects():
 
 @app.route('/api/model/<model>/info')
 def info(model):
-  (time_min,time_max,lat_min,lat_max,lon_min,lon_max) = _range(model)
+  (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon) = _range(model)
   return jsonify( time_min=time_min,
              time_max=time_max,
              lat_min=lat_min,
              lat_max=lat_max,
              lon_min=lon_min,
-             lon_max=lon_max )
+             lon_max=lon_max,
+             polygon=polygon)
 
 @app.route('/api/model/<model>/projection', methods=["GET","POST"])
 def projection(model):
@@ -158,7 +169,7 @@ def projection(model):
     abort(404)
   defaults = metadata[model]["defaults"]
 
-  (time_min,time_max,lat_min,lat_max,lon_min,lon_max) = _range(model)
+  (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon) = _range(model)
   to_hash = {
     "model": {"time_min": time_min, "time_max": time_max, "lat_min": lat_min,
              "lat_max": lat_max, "lon_min": lon_min, "lon_max": lon_max

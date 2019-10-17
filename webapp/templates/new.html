@@ -61,6 +61,10 @@ var create_map = function(){
       $("#latitude").val(e.latlng.lat);
       $("#longitude").val(e.latlng.lng);
    });
+  // show the bounds of the model
+   var model_polygon = L.polygon({{polygon}}, {fill: false, color:"#ff7800", weight: 1}).addTo(map);
+   map.fitBounds(model_polygon.getBounds());
+
   $("#latitude").change(update_marker_location);
   $("#longitude").change(update_marker_location);
    {% if shrink_domain %}

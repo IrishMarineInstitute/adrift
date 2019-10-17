@@ -26,10 +26,10 @@
     "defaults": {
      "latitude": 53.256302,
 	 "longitude": -9.005189,
-	 "northwest_lat": 57.9,
-	 "northwest_lon": -17.9,
-	 "southeast_lat": 48.1,
-	 "southeast_lon": -1.1,
+	 "northwest_lat": 63.8775,
+	 "northwest_lon": -30.7179,
+	 "southeast_lat": 40.1339,
+	 "southeast_lon": 9.4772,
 	 "thickness": 2
     },
     "variables": {
