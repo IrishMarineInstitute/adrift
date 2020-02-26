@@ -117,8 +117,8 @@ def _range(model):
     if len(fnames) == 0:
        print("no files found matching {0}".format(pattern), file=sys.stderr)
        abort(412)
-    cdfa = netCDF4.MFDataset(fnames[0],aggdim=var_time)
-    cdfz = netCDF4.MFDataset(fnames[-1],aggdim=var_time)
+    cdfa = netCDF4.Dataset(fnames[0])
+    cdfz = netCDF4.Dataset(fnames[-1])
 
   start_time = netCDF4.num2date(cdfa.variables[var_time][0],cdfa.variables[var_time].units)
   end_time = netCDF4.num2date(cdfz.variables[var_time][-1],cdfz.variables[var_time].units)
@@ -130,14 +130,38 @@ def _range(model):
   lat_max = float(cdfa.variables[var_lat][:][:].max())
   lon_min = float(cdfa.variables[var_lon][:][:].min())
   lon_max = float(cdfa.variables[var_lon][:][:].max())
-  lat1 = float(cdfa.variables[var_lat][0][0])
-  lat2 = float(cdfa.variables[var_lat][0][-1])
-  lat3 = float(cdfa.variables[var_lat][-1][-1])
-  lat4 = float(cdfa.variables[var_lat][-1][0])
-  lon1 = float(cdfa.variables[var_lon][0][0])
-  lon2 = float(cdfa.variables[var_lon][0][-1])
-  lon3 = float(cdfa.variables[var_lon][-1][-1])
-  lon4 = float(cdfa.variables[var_lon][-1][0])
+  try:
+    lat1 = cdfa.variables[var_lat][0].item()
+  except ValueError:
+    lat1 = cdfa.variables[var_lat][0][0].item()
+  try:
+    lat2 = cdfa.variables[var_lat][-1].item()
+  except ValueError:
+    lat2 = cdfa.variables[var_lat][0][-1].item()
+  try:
+    lat3 = cdfa.variables[var_lat][-1].item()
+  except ValueError:
+    lat3 = cdfa.variables[var_lat][-1][-1].item()
+  try:
+    lat4 = cdfa.variables[var_lat][0].item()
+  except ValueError:
+    lat4 = cdfa.variables[var_lat][-1][0].item()
+  try:
+    lon1 = cdfa.variables[var_lon][0].item()
+  except ValueError:
+    lon1 = cdfa.variables[var_lon][0][0].item()
+  try:
+    lon2 = cdfa.variables[var_lon][-1].item()
+  except ValueError:
+    lon2 = cdfa.variables[var_lon][0][-1].item()
+  try:
+    lon3 = cdfa.variables[var_lon][-1].item()
+  except ValueError:
+    lon3 = cdfa.variables[var_lon][-1][-1].item()
+  try:
+    lon4 = cdfa.variables[var_lon][0].item()
+  except ValueError:
+    lon4 = float(cdfa.variables[var_lon][-1][0])
   polygon = [[lat1,lon1],[lat2,lon2],[lat3,lon3],[lat4,lon4]]
   return (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon)
 
@@ -362,7 +386,8 @@ def extract_points(url):
   times = []
   for i in range(len(t)):
     time = netCDF4.num2date(t[i],units=time_units,calendar=time_calendar)
-    timestamp = "{0}Z".format(time.isoformat())
+    # timestamp = "{0}Z".format(time.isoformat())
+    timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ")
     points = {"timestamp": timestamp, "points": []}
     times.append(points)
     result = {"time": timestamp, "features": []}

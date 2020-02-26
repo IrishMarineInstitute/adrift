@@ -43,7 +43,8 @@ ldconfig
 
 # Install Netcdf
 #v=4.6.2
-v=4.7.1
+# v=4.7.1
+v=4.7.3
 #wget --no-check-certificate https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-c-${v}.tar.gz
 wget --no-check-certificate https://128.117.149.20/downloads/netcdf/ftp/netcdf-c-${v}.tar.gz
 tar -xf netcdf-c-${v}.tar.gz && cd netcdf-c-${v}

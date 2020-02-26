@@ -2,7 +2,9 @@
 Project for connecting java-based particle transport models to modern web visualisations
 
 # installation
-Before installing, download [ichthyop-3.3.3.zip](http://www.ichthyop.org/) into the folder.
+Before installing, download [ichthyop-3.3.3.zip](http://www.ichthyop.org/system/files/downloads/ichthyop_3.3.3_1.zip) into the folder.
+
+NB: the current cmems_ibi configuration works only with an older version [Ichthyop 3.3_r1031](http://www.ichthyop.org/system/files/downloads/ichthyop-3.3.zip)
 
 # nfs mount
 Connect ROMS output to the host server.

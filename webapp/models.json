@@ -1,4 +1,23 @@
 {
+  "cmems_ibi": {
+    "id": "cmems_ibi", 
+    "name": "cmems_ibi",
+    "shrink_domain": false,
+    "defaults": {
+         "latitude": 53.256302,
+	 "longitude": -9.005189,
+	 "northwest_lat": 52,
+	 "northwest_lon": -10,
+	 "southeast_lat": 50,
+	 "southeast_lon": -8,
+	 "thickness": 2
+    },
+    "variables": {
+	 "latitude": "lat",
+	 "longitude": "lon",
+	 "time": "time"
+    }
+  },
   "connemara_his": {
     "id": "connemara_his", 
     "name": "Connemara",
