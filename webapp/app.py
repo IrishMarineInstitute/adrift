@@ -122,6 +122,8 @@ def _range(model):
 
   start_time = netCDF4.num2date(cdfa.variables[var_time][0],cdfa.variables[var_time].units)
   end_time = netCDF4.num2date(cdfz.variables[var_time][-1],cdfz.variables[var_time].units)
+  cdfa_ntimes = len(cdfa.variables[var_time])
+  print("cdfa_ntimes {}".format(cdfa_ntimes),file=sys.stderr)
   
   time_min = "{0}Z".format(start_time).replace(" ","T")
   time_max = "{0}Z".format(end_time).replace(" ","T")
@@ -131,37 +133,20 @@ def _range(model):
   lon_min = float(cdfa.variables[var_lon][:][:].min())
   lon_max = float(cdfa.variables[var_lon][:][:].max())
   try:
-    lat1 = cdfa.variables[var_lat][0].item()
+    lat1 = lat2 = cdfa.variables[var_lat][0].item()
+    lon1 = lon4 = cdfa.variables[var_lon][0].item()
+    lat3 = lat4 = cdfa.variables[var_lat][-1].item()
+    lon2 = lon3 = cdfa.variables[var_lon][-1].item()
   except ValueError:
     lat1 = cdfa.variables[var_lat][0][0].item()
-  try:
-    lat2 = cdfa.variables[var_lat][-1].item()
-  except ValueError:
     lat2 = cdfa.variables[var_lat][0][-1].item()
-  try:
-    lat3 = cdfa.variables[var_lat][-1].item()
-  except ValueError:
     lat3 = cdfa.variables[var_lat][-1][-1].item()
-  try:
-    lat4 = cdfa.variables[var_lat][0].item()
-  except ValueError:
     lat4 = cdfa.variables[var_lat][-1][0].item()
-  try:
-    lon1 = cdfa.variables[var_lon][0].item()
-  except ValueError:
     lon1 = cdfa.variables[var_lon][0][0].item()
-  try:
-    lon2 = cdfa.variables[var_lon][-1].item()
-  except ValueError:
     lon2 = cdfa.variables[var_lon][0][-1].item()
-  try:
-    lon3 = cdfa.variables[var_lon][-1].item()
-  except ValueError:
     lon3 = cdfa.variables[var_lon][-1][-1].item()
-  try:
-    lon4 = cdfa.variables[var_lon][0].item()
-  except ValueError:
-    lon4 = float(cdfa.variables[var_lon][-1][0])
+    lon4 = cdfa.variables[var_lon][-1][0].item()
+
   polygon = [[lat1,lon1],[lat2,lon2],[lat3,lon3],[lat4,lon4]]
   return (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon)
 

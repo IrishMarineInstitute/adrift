@@ -4,11 +4,11 @@
     "name": "cmems_ibi",
     "shrink_domain": false,
     "defaults": {
-         "latitude": 53.256302,
-	 "longitude": -9.005189,
+         "latitude": 45,
+	 "longitude": -6,
 	 "northwest_lat": 52,
-	 "northwest_lon": -10,
-	 "southeast_lat": 50,
+	 "northwest_lon": -4,
+	 "southeast_lat": 45,
 	 "southeast_lon": -8,
 	 "thickness": 2
     },

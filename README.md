@@ -4,7 +4,7 @@ Project for connecting java-based particle transport models to modern web visual
 # installation
 Before installing, download [ichthyop-3.3.3.zip](http://www.ichthyop.org/system/files/downloads/ichthyop_3.3.3_1.zip) into the folder.
 
-NB: the current cmems_ibi configuration works only with an older version [Ichthyop 3.3_r1031](http://www.ichthyop.org/system/files/downloads/ichthyop-3.3.zip)
+NB: the current cmems_ibi configuration works only with an older version [Ichthyop 3.3_r1037](http://www.ichthyop.org/system/files/downloads/ichthyop-v3u3.zip)
 
 # nfs mount
 Connect ROMS output to the host server.
@@ -43,3 +43,11 @@ Running in docker-compose also check the docs to create the [htaccess password f
 
 # docker swarm
 ```docker service create --name adrift --label traefik.port=5000 --label traefik.domain=dm.marine.ie --network traefik-net --mount type=bind,src=/opt/adrift/output,dst=/output --mount type=bind,src=/opt/thredds/connemara_his/,dst=/input/connemara_his --constraint node.hostname=="dmdock04" 127.0.0.1:5000/adrift:latest ```
+
+# on server iapetus
+
+```shell
+cd /home/opsuser/dev/adrift
+docker stop adrift && docker rm adrift
+docker run -d --name=adrift --restart=always -v /home/DATA/ROMS/OUTPUT/Connemara/FC/WEEK_ARCHIVE/:/input/connemara_his -v /home/DATA/CMEMS:/input/cmems_ibi -v $(pwd)/output:/output -p 80:5000 127.0.0.1:5000/adrift
+```

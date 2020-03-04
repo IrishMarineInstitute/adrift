@@ -13,7 +13,10 @@ COPY requirements.txt requirements.txt
 RUN pip3 install Cython
 RUN pip3 install -r requirements.txt
 # You'll need to fetch ichthyop from http://www.ichthyop.org/downloads
-COPY ichthyop*.zip ichthyop.zip 
+# COPY ichthyop*.zip ichthyop.zip 
+# Pinned to this version now for cmems_ibi
+# http://www.ichthyop.org/system/files/downloads/ichthyop-v3u3.zip
+COPY ichthyop-v3u3.zip ichthyop.zip
 RUN unzip -d unzipped ichthyop.zip && \
     mv unzipped/* ichthyop && \
     rm -rf unzip ichthyop*.zip
