@@ -102,6 +102,11 @@ def models():
      items.append(v)
   return jsonify(items)
 
+def _get_times(cdf,var_time):
+  units = cdf.variables[var_time].units
+  times = [netCDF4.num2date(t,units) for t in cdf.variables[var_time]]
+  return ["{0}Z".format(t).replace(" ","T") for t in times]
+
 def _range(model):
   md = _models()[model]
   var_time = md['variables']['time']
@@ -120,13 +125,9 @@ def _range(model):
     cdfa = netCDF4.Dataset(fnames[0])
     cdfz = netCDF4.Dataset(fnames[-1])
 
-  start_time = netCDF4.num2date(cdfa.variables[var_time][0],cdfa.variables[var_time].units)
-  end_time = netCDF4.num2date(cdfz.variables[var_time][-1],cdfz.variables[var_time].units)
-  cdfa_ntimes = len(cdfa.variables[var_time])
-  print("cdfa_ntimes {}".format(cdfa_ntimes),file=sys.stderr)
-  
-  time_min = "{0}Z".format(start_time).replace(" ","T")
-  time_max = "{0}Z".format(end_time).replace(" ","T")
+  time_min = _get_times(cdfa,var_time)[0]
+  time_max = _get_times(cdfz,var_time)[-1]
+
   # TODO: fix these to work also on 2d model...
   lat_min = float(cdfa.variables[var_lat][:][:].min())
   lat_max = float(cdfa.variables[var_lat][:][:].max())
@@ -170,6 +171,61 @@ def info(model):
              lon_min=lon_min,
              lon_max=lon_max,
              polygon=polygon)
+
+def _indexOfLastNotGreater(l,val):
+  l2 = [v for v in l if v<=val]
+  if len(l2):
+    return len(l2) - 1
+  return 0
+
+def _indexOfLastNotSmaller(l,val):
+  l.reverse()
+  l2 = [v for v in l if v>=val]
+  answer = len(l)-1
+  if len(l2):
+    answer = len(l)-len(l2)
+  l.reverse()
+  return answer
+
+def _calculate_nc_fetch_url(
+          md, 
+          start_time,
+          end_time,
+          northwest_lat,
+          northwest_lon,
+          southeast_lat,
+          southeast_lon):
+  """
+  Replace the {lat_range} {lon_range} {time_range} params in a string
+  Example:
+  "nc_fetch_url": "http://thredds.marine.ie/thredds/dodsC/IMI_CMEMS/AGGREGATE?lon[{{lon_range}}],lat[{{lat_range}}],v[{{time_range}}][{{lat_range}}][{{lon_range}}],time[{{time_range}}],u[{{time_range}}][{{lat_range}}][{{lon_range}}]"
+  """
+  if not "opendap_url" in md:
+    return "ERROR nc_fetch_url can only be used if opendap_url is provided in models.json"
+
+  cdfa = netCDF4.Dataset(md["opendap_url"])
+  var_lat = md['variables']['latitude']
+  var_lon = md['variables']['longitude']
+  var_time = md['variables']['time']
+  nc_fetch_url_pattern = md["nc_fetch_url"]
+  lats = [x.item() for x in cdfa.variables[var_lat]]
+  lons = [x.item() for x in cdfa.variables[var_lon]]
+  times = _get_times(cdfa,var_time)
+  time_range = "{0}:1:{1}".format(_indexOfLastNotGreater(times,start_time),
+                                  _indexOfLastNotSmaller(times,end_time))
+  lat_range = "{0}:1:{1}".format(
+      _indexOfLastNotSmaller(lats,southeast_lat),
+      _indexOfLastNotGreater(lats,northwest_lat))
+
+  lon_range = "{0}:1:{1}".format(_indexOfLastNotGreater(lons,northwest_lon),
+                                  _indexOfLastNotSmaller(lons,southeast_lon))
+  return pystache.render(nc_fetch_url_pattern,{
+    "time_range": time_range,
+    "lat_range": lat_range,
+    "lon_range": lon_range
+    })
+
+
 
 @app.route('/api/model/<model>/projection', methods=["GET","POST"])
 def projection(model):
@@ -257,6 +313,17 @@ def projection(model):
   context['project_path'] = '/project/{0}/{1}/'.format(model_date_path,hash)
   context['created_time'] = "{0}Z".format(datetime.datetime.now().isoformat()[0:19])
   context['project_name'] = project_name
+  if "nc_fetch_url" in metadata[model]:
+    context["nc_input_file"] = "{0}/input.nc".format(release_dir)
+    context["nc_fetch_url"] =  _calculate_nc_fetch_url(
+          metadata[model], 
+          context['start_time'],
+          context['end_time'],
+          northwest_lat,
+          northwest_lon,
+          southeast_lat,
+          southeast_lon)
+
   context_file_path = "{0}/context.json".format(release_dir)
   with open(context_file_path,'w') as f:
     json.dump(context,f)
@@ -295,9 +362,20 @@ def _generate_project(context,status_output_path,log_output_path):
   nc_output_path = "{0}/output.nc".format(release_dir)
 
   point_output_path = "{0}/point_{1}.json".format(release_dir,"{0}")
+  if("nc_fetch_url" in context):
+    overwrite_json_file(status_output_path,"nccopy {0} {1}".format(context["nc_fetch_url"], context["nc_input_file"]))
+    with open(log_output_path,'a') as applog:
+      logline = "nccopy {0} {1}".format(context["nc_fetch_url"], context["nc_input_file"])
+      overwrite_json_file(status_output_path,logline)
+      applog.write(logline+"\n")
+      proc = subprocess.Popen(['nccopy', context["nc_fetch_url"], context["nc_input_file"]],
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+      for line in iter(proc.stdout.readline, b''):
+        line = line.decode('utf-8')
+        applog.write(line)
 
   overwrite_json_file(status_output_path,"start processing")
-
+  
   if not os.path.isfile(nc_output_path):
     nc_output_pattern = '{0}/{1}*.nc'.format(output_path,output_file_prefix)
     fnames = glob.glob(nc_output_pattern)
@@ -312,7 +390,7 @@ def _generate_project(context,status_output_path,log_output_path):
       with codecs.open(xmlconfig,'w',encoding) as myfile:
         myfile.write(xml)
   
-      with open(log_output_path,'w') as applog:
+      with open(log_output_path,'a') as applog:
         pattern = '/ichthyop/ichthyop_*.jar'.format(model)
         jar = glob.glob(pattern)[0]
         proc = subprocess.Popen(['java', '-jar', jar, xmlconfig], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -321,6 +399,11 @@ def _generate_project(context,status_output_path,log_output_path):
           applog.write(line)
           if line.startswith("INFO: Step"):
             overwrite_json_file(status_output_path,line)
+        
+        if "nc_input_file" in context:
+          if os.path.exists(context["nc_input_file"]):
+            applog.write("removing {0}\n".format(context["nc_input_file"]))
+            os.remove(context["nc_input_file"])
 
       fnames = glob.glob(nc_output_pattern)
   

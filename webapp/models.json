@@ -2,15 +2,17 @@
   "cmems_ibi": {
     "id": "cmems_ibi", 
     "name": "cmems_ibi",
-    "shrink_domain": false,
+    "opendap_url": "http://thredds.marine.ie/thredds/dodsC/IMI_CMEMS/AGGREGATE",
+    "nc_fetch_url": "http://thredds.marine.ie/thredds/dodsC/IMI_CMEMS/AGGREGATE?lon[{{lon_range}}],lat[{{lat_range}}],v[{{time_range}}][{{lat_range}}][{{lon_range}}],time[{{time_range}}],u[{{time_range}}][{{lat_range}}][{{lon_range}}]",
+    "shrink_domain": true,
     "defaults": {
          "latitude": 45,
-	 "longitude": -6,
-	 "northwest_lat": 52,
-	 "northwest_lon": -4,
-	 "southeast_lat": 45,
-	 "southeast_lon": -8,
-	 "thickness": 2
+      	 "longitude": -6,
+      	 "northwest_lat": 52,
+      	 "northwest_lon": -4,
+      	 "southeast_lat": 45,
+      	 "southeast_lon": -8,
+	        "thickness": 2
     },
     "variables": {
 	 "latitude": "lat",
