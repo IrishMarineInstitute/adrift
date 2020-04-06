@@ -98,6 +98,56 @@ Example:
   
 </dl>
 
+## Mustache templates
+For each model listed in models.json, a corresponding Ichthoyp configuration file is required. The Ichthyop file is named with the model id, contains some or all of the placeholders listed below, and has a [.mustache](https://mustache.github.io/) extension. For examples see:
+File | Description
+--- | ---
+[connemara_his.xml.mustache](blob/master/webapp/connemara_his.xml.mustache) | ROMS 3d model with data on local file system
+[neatl.xml.mustache](blob/master/webapp/neatl.xml.mustache) | ROMS 3d model with data in opendap
+[cmems_ibi.xml.mustache](blob/master/webapp/cmems_ibi.xml.mustache) | Mercator 2D model with data in opendap
+
+Having added an entry for your model into models.json file, you will create a template from your Ichthyop xml file, into the webapp folder, containing most or all of these placeholders:
+
+<dl>
+<dt>{{beginning}}</dt>
+<dd>Use for value of the the initial_time parameter</dd>
+
+<dt>{{depth}}</dt>
+<dd>Use for value of the depth_stain parameter. Note there is no way for the user to change this value of this parameter at present.</dd>
+
+<dt>{{duration}}</dt>
+<dd>Use for value of the transport_duration parameter</dd>
+
+<dt>{{input_path}}</dt>
+<dd>Use for the value of the input_path parameter where the input files are on the local filesystem</dd>
+
+<dt>{{latitude}}</dt>
+<dd>Use for the value of the lat_stain parameter</dd>
+
+<dt>{{longitude}}</dt>
+<dd>Use for the value of the lon_stain parameter</dd>
+
+<dt>{{opendap_url}}</dt>
+<dd>The URL of the opendap aggregate; Use for the value of the opendap_url parameter.</dd>
+
+<dt>{{output_file_prefix}}</dt>
+<dd>TUse for the value of the file_prefix parameter in the main output section</dd>
+
+<dt>{{output_path}}</dt>
+<dd>Use for the value of the output_path parameter in the main output section</dd>
+
+<dt>{{radius}}</dt>
+<dd>Use for the value of the radius_stain parameter</dd>
+
+<dt>{{release_dir}}</dt>
+<dd>Use for the input_path parameter where the data is fetched from opendap by ADRIFt (see nc_fetch_url above). This is the case for the cmems_ibi example. Note in this case the value of grudu_pattern and gridv_pattern parameters must both be set to input.nc</dd>
+
+<dt>{{#shrink_domain}}true{{/shrink_domain}}{{^shrink_domain}}false{{/shrink_domain}}</dt>
+<dd>Use for the value of shrink_domain parameter for an opendap model</dd>
+
+<dt>{{thickness}}</dt>
+<dd>Can be used for the value of the thickness_stain parameter. Note there is no way for the user to change this value of this parameter at present.</dd>
+</dl>
 
 # installation
 Before installing, download [ichthyop-3.3.3.zip](http://www.ichthyop.org/system/files/downloads/ichthyop_3.3.3_1.zip) into the folder.
