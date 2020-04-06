@@ -44,6 +44,59 @@ Example:
     }
   }
 ``` 
+<dl>
+  <dt>id</dt>
+  <dd>A short code id for the model; this must be the same as the key used to identify the model (cmems_ibi in the above example). It is used also in the name of the model template file, for example cmems_ibi.xml.mustache</dd>
+
+  <dt>name</dt>
+  <dd>The display name for the model; this will appear in the dropdown list on the main page</dd>
+  
+  <dt>opendap_url</dt>
+  <dd>Required when the model is held in an from opendap server. In the examples provided, the opendap_url is used in both the cmems_ibi and NEATL models.</dd>
+
+  <dt>nc_fetch_url</dt>
+  <dd>Required when the model is held in an opendap server, but must be fetched locally using nccopy before processing. The url is in the form of a mustache template containing the placeholders: {{time_range}}, {{lat_range}} and {{lon_range}}</dd>
+
+  <dt>shrink_domain</dt>
+  <dd>Whether to provide the user with a box to allow a smaller area to be selected. This is useful to minimise data transfer and processing time where the data is fetched from opendap.</dd>
+
+  <dt>defaults</dt>
+  <dd>This section provides default parameters used for display and processing</dd>
+
+  <dt>defaults.latitude</dt>
+  <dd>Initial marker placement latitude.</dd>
+
+  <dt>defaults.longitude</dt>
+  <dd>Initial marker placement longitude</dd>
+
+  <dt>defaults.northwest_lat</dt>
+  <dd>Northwest corner</dd>
+
+  <dt>defaults.northwest_lon</dt>
+  <dd>Northwest corner</dd>
+
+  <dt>defaults.southeast_lat</dt>
+  <dd>Southeast corner</dd>
+
+  <dt>defaults.southeast_lon</dt>
+  <dd>Southeast corner</dd>
+
+  <dt>defaults.thickness</dt>
+  <dd>Thickness of the stain (note there is currently no user input for stain thickness)</dd>
+
+  <dt>variables</dt>
+  <dd>This section tells ADRIFT how to read the latitude longitude and time from the netcdf files or opendap connection.</dd>
+
+  <dt>variables.latitude</dt>
+  <dd>Name of the latitude variable/dimension</dd>
+
+  <dt>variables.longitude</dt>
+  <dd>Name of the longitude variable/dimension</dd>
+
+  <dt>variables.time</dt>
+  <dd>Name of the time variable/dimension</dd>
+  
+</dl>
 
 
 # installation
