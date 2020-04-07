@@ -34,6 +34,7 @@ The output is available for display in the web browser, and for download as netc
 
  ## Full configuration
 
+To use ADRIFT with your own models, some further configuration is required before doing the docker build. In particular you will need to modify models.json, and add a template for your Ichtyhop configuration. Both these files are in the webapps folder.
 
 # Configuration
 
