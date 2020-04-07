@@ -13,6 +13,28 @@ which are merged into an Ichthyop input xml template at runtime.
 
 The output is available for display in the web browser, and for download as netcdf.
 
+# How to Run ADRIFT yourself
+
+## Quick Start
+
+ 1. git clone this project
+ ```bash
+ git clone https://github.com/irishmarineinstitute/adrift
+ ```
+ 2. [Download ichthyop zip file](http://www.ichthyop.org/downloads) into the cloned folder. NB: the current cmems_ibi configuration works only with an older version [Ichthyop 3.3_r1037](http://www.ichthyop.org/system/files/downloads/ichthyop-v3u3.zip)
+ 3. Build the project. This will take a while the first time.
+ ```bash
+ docker build -t adrift . 
+ ```
+ 4. start the docker container
+ ```bash
+ docker run --rm -p 5000:5000 adrift
+ ```
+ 5. connect with your browser to [http://localhost:5000/](http://localhost:5000)
+
+ ## Full configuration
+
+
 # Configuration
 
 Before installation, the models available for production are listed in [models.json](adrift/blob/master/webapp/models.json).
@@ -158,10 +180,39 @@ NB: the current cmems_ibi configuration works only with an older version [Ichthy
 docker build -t adrift .
 ```
 
+## Mapping input files
+
+If your project uses files on the local filesystem rather than opendap, you'll need to share them into the docker container such that they are listed in <b>/input/{id}</b> folder, where <b>{id}</b> is the id of your model. This can be done using a docker volume mount.
+
+For example, with the <b>connemara_his</b> project, use a volume mount like this:
+
+```bash
+docker run -d --restart=always --name=adrift -v /path/to/connemara_his/netcdf/files/:/input/connemara_his -p 5000:5000 adrift
+```
+
+## Saving output
+
+To save the output folder, consider using a docker mount. For example:
+```bash
+docker run -d --restart=always --name=adrift -v /path/to/saved/output:/output -p 5000:5000 adrift
+```
+
+## Mapping input and output
+
+Below is an example command showing mapping of output folder and one input folder. In this case the application is exposed on port 80.
+
+```bash
+docker run -d --restart=always \
+-v /mnt/prometheus/shared/model/ROMS/OUTPUT/Connemara/FC/WEEK_ARCHIVE/:/input/connemara_his \
+-v /home/opsuser/dev/docker-ichthyop/output:/output \
+-p 80:5000 --name=adrift adrift
+```
 
 
-# nfs mount
-(This section is specific to Marine Institute)
+# Other notes
+The notes below are more specific to installation at Irish Marine Institute, but others may find useful.
+
+## nfs mount
 Connect ROMS output to the host server.
 
 1. Install the autofs package if it’s not already installed
@@ -172,8 +223,7 @@ Connect ROMS output to the host server.
 5. restart autofs: /etc/init.d/autofs restart
 
 
-# fetching some model data data files from the main demo server
-(This section is specifict to Marine institute)
+## fetching some model data data files from the main demo server
 ```bash
 mkdir -p input/connemara_his
 cd input/connemara_his
@@ -182,16 +232,8 @@ read password
 for item in 18 19 20 21 22 23 24 25; do wget --user=$username --password=$password "https://adrift.demo.marine.ie/nc/CONN_20180406${item}.nc"; done
 ```
 
-# running
 
-```bash
-docker run -d --restart=always \
--v /mnt/prometheus/shared/model/ROMS/OUTPUT/Connemara/FC/WEEK_ARCHIVE/:/input/connemara_his \
--v /home/opsuser/dev/docker-ichthyop/output:/output \
--p 80:5000 --name=adrift adrift
-```
-
-# Running in Docker Swarm
+## Running in Docker Swarm
 
 ```bash
 docker build -t 127.0.0.1:5000/adrift .
@@ -201,11 +243,10 @@ docker push 127.0.0.1:5000/adrift
 Running in docker-compose also check the docs to create the [htaccess password file](https://github.com/jwilder/nginx-proxy#basic-authentication-support)
 
 
-## example docker swarm
+### example docker swarm
 ```docker service create --name adrift --label traefik.port=5000 --label traefik.domain=dm.marine.ie --network traefik-net --mount type=bind,src=/opt/adrift/output,dst=/output --mount type=bind,src=/opt/thredds/connemara_his/,dst=/input/connemara_his --constraint node.hostname=="dmdock04" 127.0.0.1:5000/adrift:latest ```
 
-# on server iapetus
-(Specifict to Marine Institute)
+## Running on server iapetus
 
 ```shell
 cd /home/opsuser/dev/adrift
