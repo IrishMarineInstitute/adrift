@@ -1,0 +1,69 @@
+from opendrift.models.leeway import Leeway
+from opendrift.readers import reader_ROMS_native
+from opendrift.readers import reader_netCDF_CF_generic
+from datetime import datetime, timedelta
+import dateutil.parser
+
+print('setting up...')
+
+filename = '{{nc_output_path}}'
+
+""" Set seeding conditions """
+longitude = {{longitude}}
+latitude = {{latitude}}
+    
+# Set number of floats 
+N = {{number_of_particles}}
+
+# Date
+start_time = datetime({{start_time_datetime}})
+end_time = datetime({{end_time_datetime}})
+    
+# Radius for uniform dispersion around source [meters]
+R = {{radius}}
+
+
+    
+""" Model initialization """
+lw = Leeway(loglevel=20)
+
+""" Add readers """
+# Ocean data
+print('fetching {{opendap_url}}')
+phys = reader_ROMS_native.Reader('{{opendap_url}}')
+print('fetching {{wind_url}}')
+wind = reader_netCDF_CF_generic.Reader('{{wind_url}}')
+
+# Adding readers
+lw.add_reader([phys,wind])
+
+objectType = {{object_type}} # {{object_type_key}} {{object_type_description}}
+
+""" Seed elements """
+lw.seed_elements(lon=longitude,
+                lat=latitude,
+                number=N,
+                radius=R,
+                radius_type="uniform",
+                time=start_time,
+                objectType=objectType
+                )
+        
+""" Model run """
+print('starting model run')
+lw.run(end_time=end_time, 
+        time_step=timedelta(minutes=10), 
+        time_step_output=timedelta(minutes=10), 
+        outfile=filename,
+        export_variables=["trajectory", 
+                            "time", 
+                            "status",
+                            "age_seconds",
+                            "lon", 
+                            "lat"]
+        )
+
+#(times,a) = lw.get_time_array()
+#(lats,lons) = lw.get_lonlats()
+print('finished model run')
+

@@ -16,9 +16,27 @@ import subprocess
 import shutil
 from operator import itemgetter
 import traceback
+from opendrift.models.leeway import Leeway
+from opendrift.readers import reader_netCDF_CF_generic
+import math
+
+os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
+
+LEEWAY_OBJECTS = []
+def _init():
+  global LEEWAY_OBJECTS
+  l = Leeway()
+  LEEWAY_OBJECTS = [{
+    'OBJKEY': l.leewayprop[item]['OBJKEY'],
+    'Description': l.leewayprop[item]['Description'] 
+    }
+            for i,item in enumerate(l.leewayprop)]
+
+_init()
 
 app = Flask(__name__)
 socketio = SocketIO(app)
+
 
 @app.route('/')
 def index():
@@ -94,6 +112,12 @@ def show_new():
 def show_status(project):
     return render_template('status.html')
 
+def list_leeway_objects():
+  return [{"index": i+1,
+            "key": o["OBJKEY"],
+            "label": "{0} {1}".format(o["OBJKEY"],o["Description"])} 
+            for i,o in enumerate(LEEWAY_OBJECTS)]
+
 @app.route('/api/models')
 def models():
   items = []
@@ -124,6 +148,14 @@ def _range(model):
        abort(412)
     cdfa = netCDF4.Dataset(fnames[0])
     cdfz = netCDF4.Dataset(fnames[-1])
+
+  if "wind_url" in md:
+    cdfx = netCDF4.Dataset(md["wind_url"])
+    return _getrange(cdfx,cdfx,'time','lat','lon')
+
+  return _getrange(cdfa,cdfz,var_time,var_lat,var_lon)
+
+def _getrange(cdfa,cdfz,var_time,var_lat,var_lon):
 
   time_min = _get_times(cdfa,var_time)[0]
   time_max = _get_times(cdfz,var_time)[-1]
@@ -164,13 +196,22 @@ def list_projects():
 @app.route('/api/model/<model>/info')
 def info(model):
   (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon) = _range(model)
+  leeway_drifters = ["PIW-1", "PIW-6", "LIFE-RAFT-DB-10", "PERSON-POWERED-VESSEL-1", "PERSON-POWERED-VESSEL-2", "PERSON-POWERED-VESSEL-3", "FISHING-VESSEL-1", "SAILBOAT-1", "SAILBOAT-2", "OIL-DRUM", "CONTAINER-1", "SLDMB"]
+  if "leeway_drifters" in model:
+    leeway_drifters = model["leeway_drifters"]
+  leeway_objects = list_leeway_objects()
+  for o in leeway_objects:
+    if o["key"] in leeway_drifters:
+       o["preferred"] = True
+
   return jsonify( time_min=time_min,
              time_max=time_max,
              lat_min=lat_min,
              lat_max=lat_max,
              lon_min=lon_min,
              lon_max=lon_max,
-             polygon=polygon)
+             polygon=polygon,
+             leeway_drifters=leeway_objects)
 
 def _indexOfLastNotGreater(l,val):
   l2 = [v for v in l if v<=val]
@@ -204,6 +245,7 @@ def _calculate_nc_fetch_url(
     return "ERROR nc_fetch_url can only be used if opendap_url is provided in models.json"
 
   cdfa = netCDF4.Dataset(md["opendap_url"])
+  print(cdfa, file=sys.stderr)
   var_lat = md['variables']['latitude']
   var_lon = md['variables']['longitude']
   var_time = md['variables']['time']
@@ -240,9 +282,13 @@ def projection(model):
              "lat_max": lat_max, "lon_min": lon_min, "lon_max": lon_max
              }
   }
+  object_type = int(request.values.get('object_type','1'))
+  leeway_object = LEEWAY_OBJECTS[object_type-1]
+  object_type_description = leeway_object["Description"]
+  object_type_key = leeway_object["OBJKEY"]
   start_release_time = dateutil.parser.parse(request.values.get('start_time',time_min))
   project_name = request.values.get('project_name',
-                'Project {0} (click to rename)'.format(start_release_time.strftime("%Y-%m-%d %H:%M")))
+                '{0} {1}'.format(start_release_time.strftime("%Y-%m-%d %H:%M"),object_type_key))
   end_release_time = dateutil.parser.parse(request.values.get('end_release_time',start_release_time.isoformat()))
   end_time = dateutil.parser.parse(request.values.get('end_time',time_max))
   latitude = float(request.values.get('latitude',defaults["latitude"]))
@@ -280,7 +326,11 @@ def projection(model):
            'northwest_lat': northwest_lat,
            'northwest_lon': northwest_lon,
            'southeast_lat': southeast_lat,
-           'southeast_lon': southeast_lon
+           'southeast_lon': southeast_lon,
+           'object_type': object_type,
+           'object_type_key': object_type_key,
+           'object_type_description': object_type_description,
+           'drifter': '{0}. {1}: {2}'.format(object_type, object_type_key, object_type_description.replace('>',''))
    }
   context = {**defaults, **updates}
   for key in ["opendap_url", "shrink_domain"]:
@@ -308,8 +358,10 @@ def projection(model):
 
   context['output_file_prefix'] =  output_file_prefix
   context['release_dir'] =  release_dir
-  context['start_time'] = "{0}Z".format(start_release_time.isoformat())
-  context['end_time'] = "{0}Z".format(end_time.isoformat())
+  context['start_time'] = start_release_time.isoformat()
+  context['start_time_datetime'] = start_release_time.strftime("%Y,%-m,%-d,%-H,%-M")
+  context['end_time'] = start_release_time.isoformat()
+  context['end_time_datetime'] = end_time.strftime("%Y,%-m,%-d,%-H,%-M")
   context['project_path'] = '/project/{0}/{1}/'.format(model_date_path,hash)
   context['created_time'] = "{0}Z".format(datetime.datetime.now().isoformat()[0:19])
   context['project_name'] = project_name
@@ -323,6 +375,8 @@ def projection(model):
           northwest_lon,
           southeast_lat,
           southeast_lon)
+  if "wind_url" in metadata[model]:
+    context["wind_url"] = metadata[model]["wind_url"]
 
   context_file_path = "{0}/context.json".format(release_dir)
   with open(context_file_path,'w') as f:
@@ -360,6 +414,7 @@ def _generate_project(context,status_output_path,log_output_path):
   times_output_path = "{0}/times.json".format(release_dir)
   js_output_path = "{0}/projection.js".format(release_dir)
   nc_output_path = "{0}/output.nc".format(release_dir)
+  context["nc_output_path"] = nc_output_path;
 
   point_output_path = "{0}/point_{1}.json".format(release_dir,"{0}")
   if("nc_fetch_url" in context):
@@ -380,25 +435,23 @@ def _generate_project(context,status_output_path,log_output_path):
     nc_output_pattern = '{0}/{1}*.nc'.format(output_path,output_file_prefix)
     fnames = glob.glob(nc_output_pattern)
     if len(fnames) == 0:
-      xmlconfig = '{0}/{1}.xml'.format(output_path,output_file_prefix)
-      encoding = 'cp1252';
-      xml = None
-      with codecs.open('{0}.xml.mustache'.format(model), encoding = encoding) as myfile:
-        xml = myfile.read()
-        xml = pystache.render(xml,context)
+      pyscript = '{0}/leeway.py'.format(release_dir)
+      encoding = 'utf-8';
+      pycode = None
+      with codecs.open('leeway.py.mustache', encoding = encoding) as myfile:
+        pycode = myfile.read()
+        pycode = pystache.render(pycode,context)
 
-      with codecs.open(xmlconfig,'w',encoding) as myfile:
-        myfile.write(xml)
+      with codecs.open(pyscript,'w',encoding) as myfile:
+        myfile.write(pycode)
   
       with open(log_output_path,'a') as applog:
-        pattern = '/ichthyop/ichthyop_*.jar'.format(model)
-        jar = glob.glob(pattern)[0]
-        proc = subprocess.Popen(['java', '-jar', jar, xmlconfig], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        proc = subprocess.Popen(['python', pyscript],
+          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         for line in iter(proc.stdout.readline, b''):
           line = line.decode('utf-8')
           applog.write(line)
-          if line.startswith("INFO: Step"):
-            overwrite_json_file(status_output_path,line)
+          overwrite_json_file(status_output_path,line)
         
         if "nc_input_file" in context:
           if os.path.exists(context["nc_input_file"]):
@@ -407,8 +460,8 @@ def _generate_project(context,status_output_path,log_output_path):
 
       fnames = glob.glob(nc_output_pattern)
   
-    fnames.sort()
-    os.rename(fnames[0],nc_output_path)
+    #fnames.sort()
+    #os.rename(fnames[0],nc_output_path)
 
   overwrite_json_file(status_output_path,"extracting data from the generated file")
   (points,points2) = extract_points(nc_output_path) 
@@ -445,9 +498,8 @@ def extract_points(url):
   nc = netCDF4.Dataset(url)
 
   t = nc.variables['time'][:]
-  time_origin = nc.variables['time'].origin
-  time_units = 'seconds since 1968-05-23T00:00:00Z'
-  time_calendar = nc.variables['time'].calendar
+  time_units = nc.variables['time'].units # 'seconds since 1970-01-01 00:00:00'
+  time_calendar = 'gregorian'
 
   map = None
   results = []
@@ -459,13 +511,19 @@ def extract_points(url):
     points = {"timestamp": timestamp, "points": []}
     times.append(points)
     result = {"time": timestamp, "features": []}
-    lat = nc.variables['lat'][:]
-    lon = nc.variables['lon'][:]
-    for j in range(len(lon[i])):
-      points["points"].append([float(lat[i][j]),float(lon[i][j])]);
+    lats = nc.variables['lat'][:]
+    lons = nc.variables['lon'][:]
+    for j in range(len(lons)):
+      lamask = np.ma.getmaskarray(lats[j])
+      lomask = np.ma.getmaskarray(lons[j])
+      if lamask[i] or lomask[i]:
+        continue
+      lat = float(lats[j][i])
+      lon = float(lons[j][i])
+      points["points"].append([lat,lon]);
       feature = {"type": "Feature", "geometry":{
              "time": timestamp,
-             "type": "Point", "coordinates": [ float(lat[i][j]), float(lon[i][j])]
+             "type": "Point", "coordinates": [lat,lon]
                    }}
       #result["features"].append(feature)
       results.append(feature)

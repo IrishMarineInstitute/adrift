@@ -124,6 +124,51 @@ var _update_dates = function(startdate){
 var update_dates = function(){
    _update_dates(chrono.parseDate($("#start_time_picker").val()));
 };
+let fetch_model_info = fetch("/api/model/{{model}}/info").then(r=>r.json());
+var list_object_types = function(){
+  fetch_model_info .then(info=>{
+    let showMore = document.createElement('option');
+    showMore.innerHTML = "more options...";
+    showMore.style["font-weight"] = "bold";
+    let showFewer = document.createElement('option');
+    showFewer.innerHTML = "fewer options...";
+    showFewer.style["font-weight"] = "bold";
+    let options = info.leeway_drifters.map(e=>{
+      let option = document.createElement('option');
+      option.value = e.index;
+      if(e.preferred){
+        option.style["font-weight"] = "bold";
+      }
+      option.innerHTML = e.label.replace(/>/g,'&nbsp;&nbsp;');
+      return option;
+    });
+    options.push(showFewer);
+    let preferred_options = info.leeway_drifters.filter(e=>e.preferred).map(e=>{
+      let option = document.createElement('option');
+      option.value = e.index;
+      option.innerHTML = e.label.replace(/>/g,'');
+      return option;
+    });
+    preferred_options.push(showMore);
+    let select = document.getElementById('object_type');
+    let setOptions = (opts)=>{
+       while(select.firstChild){
+        select.removeChild(select.firstChild);
+       }
+       opts.map(o=>select.appendChild(o));
+       select.selectedIndex = 0;
+    }
+    select.onchange = ()=>{
+      let selected = select.options[select.selectedIndex];
+      if(selected === showMore){
+        setOptions(options);
+      }else if(selected === showFewer){
+        setOptions(preferred_options)
+      }
+    };
+    setOptions(preferred_options);
+  });
+}
 $(document).ready(function(){
    $("#radius").slider({
 	formatter: function(value) {
@@ -159,6 +204,7 @@ $(document).ready(function(){
    });
    update_dates();
    create_map();
+   list_object_types();
    $("#project_name").focus();
 });
 </script>
@@ -219,6 +265,10 @@ $(document).ready(function(){
     <br>
     <label class="control-label">End (UTC)</label>
      <span id="end_time_label"></span>
+  </div>
+ <div class="form-group">
+    <label class="control-label">Drifter</label>
+    <select  class="form-control" id="object_type" name="object_type"></select>
   </div>
      <div class="form-group">
       <button  type="submit" class="btn btn-default">Submit</button>
