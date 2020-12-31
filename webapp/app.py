@@ -133,7 +133,6 @@ def create_app():
                radius = radius,
                start_time = start_time,
                longitude=longitude,
-               shrink_domain=info["shrink_domain"],
                polygon=json.dumps([list(p) for p in polygon]))
 
   @app.route('/project/<path:project>/')
@@ -372,7 +371,7 @@ def create_app():
              'drifter': '{1}: {2}'.format(object_type, object_type_key, object_type_description.replace('>',''))
      }
     context = {**defaults, **updates}
-    for key in ["opendap_url", "shrink_domain"]:
+    for key in ["opendap_url"]:
         if key in metadata[model]:
             context[key] = metadata[model][key]
 
