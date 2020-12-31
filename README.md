@@ -19,15 +19,16 @@ The output is available for display in the web browser, and for download as netc
 
  1. git clone this project
  ```bash
- git clone https://github.com/irishmarineinstitute/adrift
+ git clone -b opendrift https://github.com/irishmarineinstitute/adrift adrift-opendrift
  ```
  2. Build the project. This will take a while the first time.
  ```bash
- docker build -t adrift . 
+ cd adrift-opendrift
+ docker build -t adrift-opendrift . 
  ```
  3. start the docker container
  ```bash
- docker run --rm -p 5000:5000 adrift
+ docker run --rm -p 5000:5000 adrift-opendrift
  ```
  4. connect with your browser to [http://localhost:5000/](http://localhost:5000)
 
@@ -44,43 +45,36 @@ Depending on your model type and the source of input data, three modes of operat
 The format for models.json is an object keyed by the model id.
 Example:
 ```json
-  "cmems_ibi": {
-    "id": "cmems_ibi", 
-    "name": "cmems_ibi",
-    "opendap_url": "http://thredds.marine.ie/thredds/dodsC/IMI_CMEMS/AGGREGATE",
-    "nc_fetch_url": "http://thredds.marine.ie/thredds/dodsC/IMI_CMEMS/AGGREGATE?lon[{{lon_range}}],lat[{{lat_range}}],v[{{time_range}}][{{lat_range}}][{{lon_range}}],time[{{time_range}}],u[{{time_range}}][{{lat_range}}][{{lon_range}}]",
-    "shrink_domain": true,
+  "connemara_his": {
+    "id": "connemara_his",
+    "name": "Connemara",
+    "opendap_url": "http://thredds.marine.ie/thredds/dodsC/connemara_native/connemara_native_aggregate.nc",
+    "wind_url": "http://thredds.marine.ie/thredds/dodsC/adrift_wind/adrift_wind_aggregate.nc",
     "defaults": {
-         "latitude": 45,
-         "longitude": -6,
-         "northwest_lat": 52,
-         "northwest_lon": -4,
-         "southeast_lat": 45,
-         "southeast_lon": -8,
-            "thickness": 2
+      "latitude": 53.256302,
+      "longitude": -9.005189,
+      "northwest_lat": 52,
+      "northwest_lon": -10,
+      "southeast_lat": 50,
+      "southeast_lon": -8
     },
+    "leeway_drifters": ["PIW-1", "PIW-6", "LIFE-RAFT-DB-10", "PERSON-POWERED-VESSEL-1", "PERSON-POWERED-VESSEL-2", "PERSON-POWERED-VESSEL-3", "FISHING-VESSEL-1", "SAILBOAT-1", "SAILBOAT-2", "OIL-DRUM", "CONTAINER-1", "SLDMB"],
     "variables": {
-     "latitude": "lat",
-     "longitude": "lon",
-     "time": "time"
+      "latitude": "lat_u",
+      "longitude": "lon_u",
+      "time": "ocean_time"
     }
   }
 ``` 
 <dl>
   <dt>id</dt>
-  <dd>A short code id for the model; this must be the same as the key used to identify the model (cmems_ibi in the above example). It is used also in the name of the model template file, for example cmems_ibi.xml.mustache</dd>
+  <dd>A short code id for the model; this must be the same as the key used to identify the model (connemara_his in the above example).</dd>
 
   <dt>name</dt>
   <dd>The display name for the model; this will appear in the dropdown list on the main page</dd>
   
   <dt>opendap_url</dt>
   <dd>Required when the model is held in an from opendap server. In the examples provided, the opendap_url is used in both the cmems_ibi and NEATL models.</dd>
-
-  <dt>nc_fetch_url</dt>
-  <dd>Required when the model is held in an opendap server, but must be fetched locally using nccopy before processing. The url is in the form of a mustache template containing the placeholders: {{time_range}}, {{lat_range}} and {{lon_range}}</dd>
-
-  <dt>shrink_domain</dt>
-  <dd>Whether to provide the user with a box to allow a smaller area to be selected. This is useful to minimise data transfer and processing time where the data is fetched from opendap.</dd>
 
   <dt>defaults</dt>
   <dd>This section provides default parameters used for display and processing</dd>
@@ -103,8 +97,8 @@ Example:
   <dt>defaults.southeast_lon</dt>
   <dd>Southeast corner</dd>
 
-  <dt>defaults.thickness</dt>
-  <dd>Thickness of the stain (note there is currently no user input for stain thickness)</dd>
+  <dt>leeway_drifters</dt>
+  <dd>A list of the preferred OpenDrift Leeway object_types</dd>
 
   <dt>variables</dt>
   <dd>This section tells ADRIFT how to read the latitude longitude and time from the netcdf files or opendap connection.</dd>
@@ -151,91 +145,37 @@ The following placeholders are available:
 <dt>{{opendap_url}}</dt>
 <dd>The URL of the opendap aggregate; Use for the value of the opendap_url parameter.</dd>
 
-<dt>{{output_file_prefix}}</dt>
-<dd>TUse for the value of the file_prefix parameter in the main output section</dd>
-
 <dt>{{output_path}}</dt>
 <dd>Use for the value of the output_path parameter in the main output section</dd>
 
 <dt>{{radius}}</dt>
 <dd>Use for the value of the radius_stain parameter</dd>
 
-<dt>{{release_dir}}</dt>
-<dd>Use for the input_path parameter where the data is fetched from opendap by ADRIFt (see nc_fetch_url above). This is the case for the cmems_ibi example. Note in this case the value of grudu_pattern and gridv_pattern parameters must both be set to input.nc</dd>
-
-<dt>{{#shrink_domain}}true{{/shrink_domain}}{{^shrink_domain}}false{{/shrink_domain}}</dt>
-<dd>Use for the value of shrink_domain parameter for an opendap model</dd>
 
 
 # installation
 
 ```bash
-docker build -t adrift .
-```
-
-## Mapping input files
-
-If your project uses files on the local filesystem rather than opendap, you'll need to share them into the docker container such that they are listed in <b>/input/{id}</b> folder, where <b>{id}</b> is the id of your model. This can be done using a docker volume mount.
-
-For example, with the <b>connemara_his</b> project, use a volume mount like this:
-
-```bash
-docker run -d --restart=always --name=adrift -v /path/to/connemara_his/netcdf/files/:/input/connemara_his -p 5000:5000 adrift
+docker build -t adrift-opendrift .
 ```
 
 ## Saving output
 
 To save the output folder, consider using a docker mount. For example:
 ```bash
-docker run -d --restart=always --name=adrift -v /path/to/saved/output:/output -p 5000:5000 adrift
+docker run -d --restart=always --name=adrift-opendrift -v /path/to/saved/output:/output -p 5000:5000 adrift-opendrift
 ```
-
-## Mapping input and output
-
-Below is an example command showing mapping of output folder and one input folder. In this case the application is exposed on port 80.
-
-```bash
-docker run -d --restart=always \
--v /mnt/prometheus/shared/model/ROMS/OUTPUT/Connemara/FC/WEEK_ARCHIVE/:/input/connemara_his \
--v /home/opsuser/dev/docker-ichthyop/output:/output \
--p 80:5000 --name=adrift adrift
-```
-
-
-# Other notes
-The notes below are more specific to installation at Irish Marine Institute, but others may find useful.
-
-## nfs mount
-Connect ROMS output to the host server.
-
-1. Install the autofs package if it’s not already installed
-2. put the attached auto.prometheus file in the /etc folder
-3. add the following line to the /etc/auto.master file (which should exist if autofs is installed)
-  * ```/mnt/prometheus /etc/auto.prometheus --ghost --timeout=60 --verbose```
-4. create new folder: /mnt/prometheus
-5. restart autofs: /etc/init.d/autofs restart
-
-
-## fetching some model data data files from the main demo server
-```bash
-mkdir -p input/connemara_his
-cd input/connemara_his
-read username
-read password
-for item in 18 19 20 21 22 23 24 25; do wget --user=$username --password=$password "https://adrift.demo.marine.ie/nc/CONN_20180406${item}.nc"; done
-```
-
 
 ## Running in Docker Swarm
 
 ```bash
-docker build -t 127.0.0.1:5000/adrift .
-docker push 127.0.0.1:5000/adrift
+docker build -t 127.0.0.1:5000/adrift-opendrift .
+docker push 127.0.0.1:5000/adrift-opendrift
 ```
 
 Running in docker-compose also check the docs to create the [htaccess password file](https://github.com/jwilder/nginx-proxy#basic-authentication-support)
 
 
 ### example docker swarm
-```docker service create --name adrift --label traefik.port=5000 --label traefik.domain=dm.marine.ie --network traefik-net --mount type=bind,src=/opt/adrift/output,dst=/output --mount type=bind,src=/opt/thredds/connemara_his/,dst=/input/connemara_his --constraint node.hostname=="dmdock04" 127.0.0.1:5000/adrift:latest ```
+```docker service create --name adrift-opendrift --label traefik.port=5000 --label traefik.domain=dm.marine.ie --network traefik-net --mount type=bind,src=/data/gfs/adrift-opendrift/output,dst=/output 127.0.0.1:5000/adrift-opendrift:latest ```
 
