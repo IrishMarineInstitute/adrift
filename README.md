@@ -5,11 +5,11 @@ Project for connecting java-based particle transport models to modern web visual
 
 # Overview
 
-Adrift provides a web frontend for [Ichthyop](http://www.ichthyop.org) giving a way for less technical
+Adrift provides a web frontend for [OpenDrift](https://opendrift.github.io) giving a way for less technical
 users to generate model output and visualisations once the hard work has been done by the oceanographer.
 
-The action is performed by accepting a small number of inputs from the user (location, start time, duration, radius),
-which are merged into an Ichthyop input xml template at runtime.
+The action is performed by accepting a small number of inputs from the user (location, start time, duration, radius, object type),
+which are merged into an OpenDrift python template template at runtime.
 
 The output is available for display in the web browser, and for download as netcdf.
 
@@ -21,20 +21,19 @@ The output is available for display in the web browser, and for download as netc
  ```bash
  git clone https://github.com/irishmarineinstitute/adrift
  ```
- 2. [Download ichthyop zip file](http://www.ichthyop.org/downloads) into the cloned folder. NB: the current cmems_ibi configuration works only with an older version [Ichthyop 3.3_r1037](http://www.ichthyop.org/system/files/downloads/ichthyop-v3u3.zip)
- 3. Build the project. This will take a while the first time.
+ 2. Build the project. This will take a while the first time.
  ```bash
  docker build -t adrift . 
  ```
- 4. start the docker container
+ 3. start the docker container
  ```bash
  docker run --rm -p 5000:5000 adrift
  ```
- 5. connect with your browser to [http://localhost:5000/](http://localhost:5000)
+ 4. connect with your browser to [http://localhost:5000/](http://localhost:5000)
 
  ## Full configuration
 
-To use ADRIFT with your own models, some further configuration is required before doing the docker build. In particular you will need to modify models.json, and add a template for your Ichtyhop configuration. Both these files are in the webapps folder.
+To use ADRIFT with your own models, some further configuration is required before doing the docker build. In particular you will need to modify models.json file in the webapps folder.
 
 # Configuration
 
@@ -121,15 +120,14 @@ Example:
   
 </dl>
 
-## Mustache templates
-For each model listed in models.json, a corresponding Ichthoyp configuration file is required. The Ichthyop file is named with the model id, contains some or all of the placeholders listed below, and has a [.mustache](https://mustache.github.io/) extension. For examples see:
-File | Description
---- | ---
-[connemara_his.xml.mustache](blob/master/webapp/connemara_his.xml.mustache) | ROMS 3d model with data on local file system
-[neatl.xml.mustache](blob/master/webapp/neatl.xml.mustache) | ROMS 3d model with data in opendap
-[cmems_ibi.xml.mustache](blob/master/webapp/cmems_ibi.xml.mustache) | Mercator 2D model with data in opendap
+# For Developers
 
-Having added an entry for your model into models.json file, you will create a template from your Ichthyop xml file, into the webapp folder, containing most or all of these placeholders:
+The section below is for developers changing any of the mustache templates or implementing other
+functionality:
+
+## Mustache templates
+
+The following placeholders are available:
 
 <dl>
 <dt>{{beginning}}</dt>
@@ -168,14 +166,8 @@ Having added an entry for your model into models.json file, you will create a te
 <dt>{{#shrink_domain}}true{{/shrink_domain}}{{^shrink_domain}}false{{/shrink_domain}}</dt>
 <dd>Use for the value of shrink_domain parameter for an opendap model</dd>
 
-<dt>{{thickness}}</dt>
-<dd>Can be used for the value of the thickness_stain parameter. Note there is no way for the user to change this value of this parameter at present.</dd>
-</dl>
 
 # installation
-Before installing, download [ichthyop-3.3.3.zip](http://www.ichthyop.org/system/files/downloads/ichthyop_3.3.3_1.zip) into the folder.
-
-NB: the current cmems_ibi configuration works only with an older version [Ichthyop 3.3_r1037](http://www.ichthyop.org/system/files/downloads/ichthyop-v3u3.zip)
 
 ```bash
 docker build -t adrift .
@@ -247,10 +239,3 @@ Running in docker-compose also check the docs to create the [htaccess password f
 ### example docker swarm
 ```docker service create --name adrift --label traefik.port=5000 --label traefik.domain=dm.marine.ie --network traefik-net --mount type=bind,src=/opt/adrift/output,dst=/output --mount type=bind,src=/opt/thredds/connemara_his/,dst=/input/connemara_his --constraint node.hostname=="dmdock04" 127.0.0.1:5000/adrift:latest ```
 
-## Running on server iapetus
-
-```shell
-cd /home/opsuser/dev/adrift
-docker stop adrift && docker rm adrift
-docker run -d --name=adrift --restart=always -v /home/DATA/ROMS/OUTPUT/Connemara/FC/WEEK_ARCHIVE/:/input/connemara_his -v /home/DATA/CMEMS:/input/cmems_ibi -v $(pwd)/output:/output -p 80:5000 127.0.0.1:5000/adrift
-```

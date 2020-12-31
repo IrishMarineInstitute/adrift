@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<title>Project Status...</title>
+<title>ADRIFT</title>
 <head>
 <meta charset="utf-8">
 <link rel="icon" href="/static/img/favicon.ico">
@@ -42,7 +42,14 @@ $(document).ready(function(){
          $td = $("<td></td>");
          if(project.created_time){
             var t = moment(project.created_time);
-            $td.text(t.fromNow());
+            $td.text(t.fromNow()+" ");
+         }
+         if(new Date().getTime()-new Date(project.created_time).getTime()<20*60*60*1000){
+              let copy = $(`<form method="post" action="/project/new">
+                <input type=hidden name="copy" value="${project.release_dir}" />
+                <a onclick="javascript:this.closest('form').submit();return true;" title='Click to copy ${project.project_name}'>copy</a>
+                </form>`);
+              $td.append(copy);
          }
          $row.append($td);
          $td = $("<td></td>");

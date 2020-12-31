@@ -149,6 +149,7 @@ var list_object_types = function(){
       option.innerHTML = e.label.replace(/>/g,'');
       return option;
     });
+
     preferred_options.push(showMore);
     let select = document.getElementById('object_type');
     let setOptions = (opts)=>{
@@ -170,6 +171,7 @@ var list_object_types = function(){
   });
 }
 $(document).ready(function(){
+  $("#start_time_picker").val(moment('{{start_time}}').format(picker_date_format));
    $("#radius").slider({
 	formatter: function(value) {
           $("#radius_label").text(value);
@@ -236,7 +238,7 @@ $(document).ready(function(){
   <div class="form-group">
     <label class="control-label">Start Time</label>
     <div class='input-group date' id='datetimepicker0'>
-      <input class="form-control" required id="start_time_picker" value="Yesterday at 10:45pm" name="start_time_picker" size="20" type="text" >
+      <input class="form-control" required id="start_time_picker" value="{{start_time}}" name="start_time_picker" size="20" type="text" >
       <span class="input-group-addon">
       <span class="glyphicon glyphicon-calendar" id="switchcalendar"></span>
       </span>
@@ -248,16 +250,16 @@ $(document).ready(function(){
             <span class="glyphicon glyphicon-pencil" id="cancelcalendar"></span>
           </span>
     </div>
-    <input type="hidden" id="start_time" name="start_time" value="{{date_min}}">
+    <input type="hidden" id="start_time" name="start_time" value="{{start_time}}">
   </div>
   <div class="form-group">
     <label class="control-label">Duration</label>
-     <input class="form-control" required id="duration" value="12 hours" name="duration" size="20" type="text" >
+     <input class="form-control" required id="duration" value="{{duration}}" name="duration" size="20" type="text" >
     <input type="hidden" id="end_time" name="end_time" value="{{date_max}}">
   </div>
      <div class="form-group">
        <label class="control-label">Radius <span id="radius_label"></span> metres </label>
-       <input class="form-control" id="radius" name="radius" data-slider-id='radius' data-slider-tooltip="hide" type="text" data-slider-min="5" data-slider-max="1000" data-slider-step="5" data-slider-value="250"/>
+       <input class="form-control" id="radius" name="radius" data-slider-id='radius' data-slider-tooltip="hide" type="text" data-slider-min="5" data-slider-max="1000" data-slider-step="5" data-slider-value="{{radius}}"/>
      </div>
   <div class="form-group">
     <label class="control-label">Start (UTC)</label>

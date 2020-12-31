@@ -1,5 +1,4 @@
 from flask import Flask, render_template, jsonify, request, abort, send_file, redirect
-from flask_socketio import SocketIO, emit
 import glob
 import netCDF4
 import numpy as np
@@ -19,6 +18,7 @@ import traceback
 from opendrift.models.leeway import Leeway
 from opendrift.readers import reader_netCDF_CF_generic
 import math
+import re
 
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
 
@@ -35,7 +35,6 @@ def _init():
 _init()
 
 app = Flask(__name__)
-socketio = SocketIO(app)
 
 
 @app.route('/')
@@ -87,24 +86,52 @@ def show_project_file(project,file):
 
 @app.route('/project/new', methods=['GET','POST'])
 def show_new():
+    context = None
     model = request.values.get('model','undefined')
     if model == 'undefined':
-      return redirect("/")
+      copy = request.values.get('copy','undefined')
+      if copy == 'undefined':
+        return redirect("/")
+      context_file_path = "{0}/context.json".format(copy)
+      with open(context_file_path) as f:
+        context = json.load(f)
+        model = context["model"]
     metadata = _models()
     if not model in metadata:
       return redirect("/")
     info = metadata[model]
     (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon) = _range(model)
+    latitude = info["defaults"]["latitude"]
+    longitude = info["defaults"]["longitude"]
+    start_time = time_min
+    radius = 250
+    duration = "12 hours"
+    if context != None:
+      latitude = context["latitude"]
+      longitude = context["longitude"]
+      start_time = context["start_time"]
+      radius = context["radius"]
+      human_start_time = start_time
+      duration = context["duration"]\
+                  .replace("day(s)", "days")\
+                  .replace("hour(s)", "hours")\
+                  .replace("minute(s)", "minutes")\
+                  .replace("0000 days ", "")\
+                  .replace(" 00 minutes", "")
+      duration = re.sub(r"\b0+","",duration)
     return render_template('new.html',
              model=model,
-             latitude=info["defaults"]["latitude"],
+             latitude=latitude,
              latitude_min = lat_min,
              latitude_max = lat_max,
              longitude_min = lon_min,
              longitude_max = lon_max,
              date_min = time_min,
              date_max = time_max,
-             longitude=info["defaults"]["longitude"],
+             duration = duration,
+             radius = radius,
+             start_time = start_time,
+             longitude=longitude,
              shrink_domain=info["shrink_domain"],
              polygon=json.dumps([list(p) for p in polygon]))
 
@@ -113,10 +140,16 @@ def show_status(project):
     return render_template('status.html')
 
 def list_leeway_objects():
-  return [{"index": i+1,
+  lo = [{"index": i+1,
             "key": o["OBJKEY"],
+            "description": o["Description"],
             "label": "{0} {1}".format(o["OBJKEY"],o["Description"])} 
             for i,o in enumerate(LEEWAY_OBJECTS)]
+  lo.append({"index": -1, 
+          "key": "SEABED",
+          "description": "Seabed Transport (no wind)",
+          "label": "SEABED: Seabed Transport (no wind)"})
+  return lo
 
 @app.route('/api/models')
 def models():
@@ -149,11 +182,16 @@ def _range(model):
     cdfa = netCDF4.Dataset(fnames[0])
     cdfz = netCDF4.Dataset(fnames[-1])
 
+  (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon) = _getrange(cdfa,cdfz,var_time,var_lat,var_lon)
   if "wind_url" in md:
     cdfx = netCDF4.Dataset(md["wind_url"])
-    return _getrange(cdfx,cdfx,'time','lat','lon')
+    (wtime_min,wtime_max,*rest) = _getrange(cdfx,cdfx,'time','lat','lon')
+    if wtime_min > time_min:
+      time_min = wtime_min
+    if wtime_max < time_max:
+      time_max = wtime_max
 
-  return _getrange(cdfa,cdfz,var_time,var_lat,var_lon)
+  return (time_min,time_max,lat_min,lat_max,lon_min,lon_max,polygon)
 
 def _getrange(cdfa,cdfz,var_time,var_lat,var_lon):
 
@@ -201,7 +239,7 @@ def info(model):
     leeway_drifters = model["leeway_drifters"]
   leeway_objects = list_leeway_objects()
   for o in leeway_objects:
-    if o["key"] in leeway_drifters:
+    if o["index"]<0 or o["key"] in leeway_drifters:
        o["preferred"] = True
 
   return jsonify( time_min=time_min,
@@ -283,9 +321,9 @@ def projection(model):
              }
   }
   object_type = int(request.values.get('object_type','1'))
-  leeway_object = LEEWAY_OBJECTS[object_type-1]
-  object_type_description = leeway_object["Description"]
-  object_type_key = leeway_object["OBJKEY"]
+  leeway_object = next(filter(lambda x: x["index"] == object_type, list_leeway_objects()), None)
+  object_type_description = leeway_object["description"]
+  object_type_key = leeway_object["key"]
   start_release_time = dateutil.parser.parse(request.values.get('start_time',time_min))
   project_name = request.values.get('project_name',
                 '{0} {1}'.format(start_release_time.strftime("%Y-%m-%d %H:%M"),object_type_key))
@@ -330,7 +368,7 @@ def projection(model):
            'object_type': object_type,
            'object_type_key': object_type_key,
            'object_type_description': object_type_description,
-           'drifter': '{0}. {1}: {2}'.format(object_type, object_type_key, object_type_description.replace('>',''))
+           'drifter': '{1}: {2}'.format(object_type, object_type_key, object_type_description.replace('>',''))
    }
   context = {**defaults, **updates}
   for key in ["opendap_url", "shrink_domain"]:
@@ -431,14 +469,17 @@ def _generate_project(context,status_output_path,log_output_path):
 
   overwrite_json_file(status_output_path,"start processing")
   
+  model_template = 'leeway.py.mustache'
+  if context["object_type_key"] == "SEABED":
+    model_template = 'oceandrift.py.mustache'
   if not os.path.isfile(nc_output_path):
     nc_output_pattern = '{0}/{1}*.nc'.format(output_path,output_file_prefix)
     fnames = glob.glob(nc_output_pattern)
     if len(fnames) == 0:
-      pyscript = '{0}/leeway.py'.format(release_dir)
+      pyscript = '{0}/model.py'.format(release_dir)
       encoding = 'utf-8';
       pycode = None
-      with codecs.open('leeway.py.mustache', encoding = encoding) as myfile:
+      with codecs.open(model_template, encoding = encoding) as myfile:
         pycode = myfile.read()
         pycode = pystache.render(pycode,context)
 
@@ -531,9 +572,5 @@ def extract_points(url):
   return (results,times)
 
 
-@socketio.on('my event')
-def test_message(message):
-    emit('my response', {'data': 'got it!'})
-
 if __name__ == '__main__':
-    socketio.run(app,host='0.0.0.0')
+    app.run(host='0.0.0.0')

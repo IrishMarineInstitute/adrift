@@ -16,7 +16,7 @@ RUN mkdir /output && mkdir /input
 
 COPY webapp /webapp
 WORKDIR /webapp
+ENV FLASK_APP="app.py"
 EXPOSE 5000
-CMD ["python3","app.py"]
-
+CMD ["flask","run","--host=0.0.0.0"]
 

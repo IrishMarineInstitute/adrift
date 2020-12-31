@@ -1,10 +1,9 @@
-from opendrift.models.leeway import Leeway
-from opendrift.readers import reader_netCDF_CF_generic
+from opendrift.models.oceandrift import OceanDrift
 from opendrift.readers import reader_ROMS_native
 from datetime import datetime, timedelta
 import dateutil.parser
 
-print('setting up leeway model...')
+print('setting up opendrift model (no wind)...')
 
 filename = '{{nc_output_path}}'
 
@@ -25,19 +24,15 @@ R = {{radius}}
 
     
 """ Model initialization """
-model = Leeway(loglevel=0)
+model = OceanDrift(loglevel=0)
 
 """ Add readers """
 # Ocean data
 print('fetching {{opendap_url}}')
 phys = reader_ROMS_native.Reader('{{opendap_url}}')
-print('fetching {{wind_url}}')
-wind = reader_netCDF_CF_generic.Reader('{{wind_url}}')
 
 # Adding readers
-model.add_reader([phys,wind])
-
-objectType = {{object_type}} # {{object_type_key}} {{object_type_description}}
+model.add_reader([phys])
 
 """ Seed elements """
 model.seed_elements(lon=longitude,
@@ -46,7 +41,7 @@ model.seed_elements(lon=longitude,
                 radius=R,
                 radius_type="uniform",
                 time=start_time,
-                objectType=objectType
+                z='seafloor'
                 )
 
         

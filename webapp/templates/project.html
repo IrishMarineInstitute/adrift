@@ -45,6 +45,7 @@ var map = undefined;
 var controlLayer = undefined;
 $(document).ready(function(){
   $.ajax({url: "context.json", cache: false}).done(function(data){
+    document.title = data.project_name;
     var keys = Object.keys(data);
     for(var i=0;i<keys.length;i++){
       var key = keys[i];
@@ -53,7 +54,8 @@ $(document).ready(function(){
     $("#ctx_project_name").editable({
       type: 'text',
       pk: 1,
-      url: 'update'
+      url: 'update',
+      success: ()=>setTimeout(()=>{document.title = $("#ctx_project_name").text()},0)
     });
   });
   $.ajax({url: "timepoints.json"}).done(function(series){
