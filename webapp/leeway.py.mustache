@@ -37,7 +37,7 @@ wind = reader_netCDF_CF_generic.Reader('{{wind_url}}')
 # Adding readers
 model.add_reader([phys,wind])
 
-objectType = {{object_type}} # {{object_type_key}} {{object_type_description}}
+object_type = {{object_type}} # {{object_type_key}} {{object_type_description}}
 
 """ Seed elements """
 model.seed_elements(lon=longitude,
@@ -46,7 +46,7 @@ model.seed_elements(lon=longitude,
                 radius=R,
                 radius_type="uniform",
                 time=start_time,
-                objectType=objectType
+                object_type=object_type
                 )
 
         
