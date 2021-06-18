@@ -25,7 +25,7 @@ R = {{radius}}
     
 """ Model initialization """
 model = OceanDrift(loglevel=0)
-
+model.set_config('general:use_auto_landmask', False)
 """ Add readers """
 # Ocean data
 print('fetching {{opendap_url}}')
