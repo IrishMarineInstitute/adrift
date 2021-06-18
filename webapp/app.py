@@ -27,6 +27,7 @@ LEEWAY_OBJECTS = []
 def _init():
   global LEEWAY_OBJECTS
   l = Leeway()
+  l.set_config('general:use_auto_landmask', False)
   LEEWAY_OBJECTS = [{
     'OBJKEY': l.leewayprop[item]['OBJKEY'],
     'Description': l.leewayprop[item]['Description'] 
