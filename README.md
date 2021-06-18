@@ -13,6 +13,8 @@ which are merged into an OpenDrift python template template at runtime.
 
 The output is available for display in the web browser, and for download as netcdf.
 
+The Norwegian Meteorological Institute have also created Web based API interface for running Opendrift simulations called “Drifty” ( https://rest.drifty.met.no/ )
+
 # How to Run ADRIFT yourself
 
 ## Quick Start
