@@ -30,6 +30,31 @@
 }
 </style>
 <script>
+
+function timeEntryMode(src) {
+	var timeIntervalDiv = document.getElementById("TIME_INTERVAL");
+	var exactTimeDiv = document.getElementById("EXACT_TIME");
+	if ( src.value === "Time interval" ) {
+            timeIntervalDiv.style.display = "block";
+	    exactTimeDiv.style.display = "none";
+        } else {
+            timeIntervalDiv.style.display = "none";
+	    exactTimeDiv.style.display = "block";
+        }
+}	
+
+function timeTypeFunction() {
+	var timeIntervalDiv = document.getElementById("TIME_INTERVAL");
+	var exactTimeDiv = document.getElementById("EXACT_TIME");
+	if ( document.getElementById('exactTime').checked ) {
+            timeIntervalDiv.style.display = "none";
+	    exactTimeDiv.style.display = "block";
+	} else {
+            timeIntervalDiv.style.display = "block";
+	    exactTimeDiv.style.display = "none";
+        }
+}
+
 var min_date = new Date().setISO8601("{{date_min}}");
 var max_date = new Date().setISO8601("{{date_max}}");
 var date_range_millis = max_date.getTime() - min_date.getTime();
@@ -92,9 +117,7 @@ var format_date = function(d){
 var picker_date_format = "MMM DD h:mm A"
 
 var _update_dates = function(startdate){
-   if(startdate == null){
-      $("#start_time_label").text("Unrecognised start time");
-   }else{
+   
      if(startdate.getTime()<min_date.getTime()){
         startdate = new Date(min_date.getTime()); 
         $("#start_time_picker").val(moment(startdate).format(picker_date_format));
@@ -104,26 +127,54 @@ var _update_dates = function(startdate){
         $("#start_time_picker").val(moment(startdate).format(picker_date_format));
         $('#start_time_picker').animate({backgroundColor: '#FF0000'}, 'slow');
      }
-     $("#start_time_label").text(format_date(startdate));
-     $("#start_time").val(format_date(startdate));
-   }
-   try{
-       var duration = juration.parse($("#duration").val());
-       var enddate = new Date(startdate.getTime()+(duration*1000));
-       if(enddate.getTime()>max_date.getTime()){
-         enddate = new Date(max_date.getTime());
-         duration = (enddate.getTime()-startdate.getTime())/1000;
-         $("#duration").val(juration.stringify(duration,{format: 'long'}));
+     
+       if(startdate.getTime()<min_date.getTime()){
+          startdate = new Date(min_date.getTime()); 
+          $("#start_time_picker2").val(moment(startdate).format(picker_date_format));
+          $('#start_time_picker2').animate({backgroundColor: '#FF0000'}, 'slow');
+       }else if(startdate.getTime()>max_date.getTime()-3600000){
+          startdate = new Date(max_date.getTime()-3600000);
+          $("#start_time_picker2").val(moment(startdate).format(picker_date_format));
+          $('#start_time_picker2').animate({backgroundColor: '#FF0000'}, 'slow');
        }
-      $("#end_time").val(format_date(enddate));
-      $("#end_time_label").text(format_date(enddate));
-   }catch(e){
-     $("#end_time_label").text("Unrecognised duration");
-   }
+       
+         if(startdate.getTime()<min_date.getTime()){
+            startdate = new Date(min_date.getTime()); 
+            $("#start_time_picker3").val(moment(startdate).format(picker_date_format));
+            $('#start_time_picker3').animate({backgroundColor: '#FF0000'}, 'slow');
+         }else if(startdate.getTime()>max_date.getTime()-3600000){
+            startdate = new Date(max_date.getTime()-3600000);
+            $("#start_time_picker3").val(moment(startdate).format(picker_date_format));
+            $('#start_time_picker3').animate({backgroundColor: '#FF0000'}, 'slow');
+         }
+         
+           if(startdate.getTime()<min_date.getTime()){
+              startdate = new Date(min_date.getTime()); 
+              $("#start_time_picker4").val(moment(startdate).format(picker_date_format));
+              $('#start_time_picker4').animate({backgroundColor: '#FF0000'}, 'slow');
+           }else if(startdate.getTime()>max_date.getTime()-3600000){
+              startdate = new Date(max_date.getTime()-3600000);
+              $("#start_time_picker4").val(moment(startdate).format(picker_date_format));
+              $('#start_time_picker4').animate({backgroundColor: '#FF0000'}, 'slow');
+           }
+     
+     
+     $("#start_time").val(format_date(startdate));
+     $("#start_time2").val(format_date(startdate));
+     $("#start_time3").val(format_date(startdate));
+     $("#start_time4").val(format_date(startdate));
+   
 }
+
+
 var update_dates = function(){
    _update_dates(chrono.parseDate($("#start_time_picker").val()));
+   _update_dates(chrono.parseDate($("#start_time_picker2").val()));
+   _update_dates(chrono.parseDate($("#start_time_picker3").val()));
+   _update_dates(chrono.parseDate($("#start_time_picker4").val()));
 };
+
+
 let fetch_model_info = fetch("/api/model/{{model}}/info").then(r=>r.json());
 var list_object_types = function(){
   fetch_model_info .then(info=>{
@@ -170,8 +221,14 @@ var list_object_types = function(){
     setOptions(preferred_options);
   });
 }
+
+
+
 $(document).ready(function(){
   $("#start_time_picker").val(moment('{{start_time}}').format(picker_date_format));
+  $("#start_time_picker2").val(moment('{{start_time}}').format(picker_date_format));
+  $("#start_time_picker3").val(moment('{{start_time}}').format(picker_date_format));
+  $("#start_time_picker4").val(moment('{{start_time}}').format(picker_date_format));
    $("#radius").slider({
 	formatter: function(value) {
           $("#radius_label").text(value);
@@ -180,7 +237,10 @@ $(document).ready(function(){
     $("input:text").focus(function() { $(this).select(); } );
 
    $("#start_time_picker").on("change",update_dates);
-   $("#duration").on("change",update_dates);
+   $("#start_time_picker2").on("change",update_dates);
+   $("#start_time_picker3").on("change",update_dates);
+   $("#start_time_picker4").on("change",update_dates);
+   
    $("#switchcalendar").on("click",function(){
     $("#datetimepicker0").addClass('hidden');
     $("#datetimepicker1").removeClass('hidden');
@@ -200,10 +260,92 @@ $(document).ready(function(){
        });
 
    });
+   
+   
+      $("#switchcalendar2").on("click",function(){
+       $("#datetimepicker3").addClass('hidden');
+       $("#datetimepicker4").removeClass('hidden');
+          $('#datetimepicker5').datetimepicker({
+                   format: "YYYY-MM-DD HH:mm",
+                   inline: true,
+                   sideBySide: true,
+                   defaultDate:  $("#start_time2").val(),
+                   minDate: min_date,
+                   maxDate: max_date
+               });
+
+          $('#datetimepicker5').on('dp.change',function(e){
+           $("#start_time_picker2").val(e.date.format(picker_date_format));
+           _update_dates(e.date.toDate());
+
+          });
+
+      });
+      
+      
+         $("#switchcalendar3").on("click",function(){
+          $("#datetimepicker6").addClass('hidden');
+          $("#datetimepicker7").removeClass('hidden');
+             $('#datetimepicker8').datetimepicker({
+                      format: "YYYY-MM-DD HH:mm",
+                      inline: true,
+                      sideBySide: true,
+                      defaultDate:  $("#start_time3").val(),
+                      minDate: min_date,
+                      maxDate: max_date
+                  });
+
+             $('#datetimepicker8').on('dp.change',function(e){
+              $("#start_time_picker3").val(e.date.format(picker_date_format));
+              _update_dates(e.date.toDate());
+
+             });
+
+         });
+   
+   
+      $("#switchcalendar4").on("click",function(){
+       $("#datetimepicker9").addClass('hidden');
+       $("#datetimepicker10").removeClass('hidden');
+          $('#datetimepicker11').datetimepicker({
+                   format: "YYYY-MM-DD HH:mm",
+                   inline: true,
+                   sideBySide: true,
+                   defaultDate:  $("#start_time4").val(),
+                   minDate: min_date,
+                   maxDate: max_date
+               });
+
+          $('#datetimepicker11').on('dp.change',function(e){
+           $("#start_time_picker4").val(e.date.format(picker_date_format));
+           _update_dates(e.date.toDate());
+
+          });
+
+      });
+   
    $("#cancelcalendar").on("click",function(){
         $("#datetimepicker1").addClass('hidden');
       $("#datetimepicker0").removeClass('hidden');
    });
+   
+   
+   $("#cancelcalendar2").on("click",function(){
+        $("#datetimepicker4").addClass('hidden');
+      $("#datetimepicker3").removeClass('hidden');
+   });
+   
+   
+   $("#cancelcalendar3").on("click",function(){
+        $("#datetimepicker7").addClass('hidden');
+      $("#datetimepicker6").removeClass('hidden');
+   });
+   
+   $("#cancelcalendar4").on("click",function(){
+        $("#datetimepicker10").addClass('hidden');
+      $("#datetimepicker9").removeClass('hidden');
+   });
+   
    update_dates();
    create_map();
    list_object_types();
@@ -211,32 +353,55 @@ $(document).ready(function(){
 });
 </script>
 </head>
-<body>
+<body onload="timeTypeFunction()">
 <div class="container">
 <h1><a href="/">ADRIFT</a></h1>
 <p class="lead"><a href="http://www.marine.ie/">Marine Institute</a> predicted sea surface tracking.</p>
 <div class="row">
 <div class="col-md-12">
 <form id="new_project_form" method="post" action="/api/model/{{model}}/projection">
-  <h4>Enter New Project Start Location <small>or drag marker</small></h4>
   <div class="row">
    <div class="col-md-6">
      <div class="form-group">
-       <label class="control-label">Latitude</label>
+       <label class="control-label">LATITUDE. Please, enter the approximate latitude where the body entered the water. Alternatively, drag the marker on the map on the right.</label>
        <!--
        <input class="form-control" required type="number" size="20" min="{{latitude_min}}" max="{{latitude_max}}" step="any" id="latitude" name="latitude" value="{{latitude}}" >
        -->
        <input class="form-control" required type="number" size="20" step="any" id="latitude" name="latitude" value="{{latitude}}" >
      </div>
      <div class="form-group">
-       <label class="control-label">Longitude</label>
+       <label class="control-label">LONGITUDE. Please, enter the approximate longitude where the body entered the water. Alternatively, drag the marker on the map on the right.</label>
        <!--
        <input class="form-control" required type="number" size="20" min="{{longitude_min}}" max="{{longitude_max}}" step="any" id="longitude" name="longitude" value="{{longitude}}" >
        -->
        <input class="form-control" required type="number" size="20" step="any" id="longitude" name="longitude" value="{{longitude}}" >
      </div>
+
+     <div class="form-group">
+       <label class="control-label">RADIUS. Use the slider below to select a radius of dispersion around the centre. This is used to account for uncertainties on the location where the body entered the water.</label>
+       <label class="control-label"> <span id="radius_label"></span> metres </label>
+       <input class="form-control" id="radius" name="radius" data-slider-id='radius' data-slider-tooltip="hide" type="text" data-slider-min="5" data-slider-max="1000" data-slider-step="5" data-slider-value="{{radius}}"/>
+     </div>
+
+     <hr>
+     	 <!-- TYPE OF RELEASE (EITHER EXACT TIME OR TIME INTERVAL) -->
+     	 <div class="form-group">
+		  
+		 <label class="control-label">ENTRY TIME. Please, enter the time when the body entered the water. If the entry time is known with high accuracy, select the "Exact time" option. Otherwise, select the "Time interval" option.  </label>
+                      
+		 <label>                    <input type="radio" id="timeInterval" name="timetype" value="Time interval" onchange="timeEntryMode(this);" checked>
+			 <i>Time interval</i></label>
+
+		 <label><input style="margin-left:50px;" type="radio" id="exactTime" name="timetype" value="Exact time" onchange="timeEntryMode(this);">
+			 <i>Exact time</i></label>
+                                        
+      	 </div> <!-- TYPE OF RELEASE (EITHER EXACT TIME OR TIME INTERVAL) (END) -->
+      	 
+
+<div id="EXACT_TIME" style="display: none;" > <!-- Widgets to select an exact entry time -->
+
   <div class="form-group">
-    <label class="control-label">Start Time</label>
+  <label class="control-label">TIME. Please, enter the time when the body entered the water.</label>
     <div class='input-group date' id='datetimepicker0'>
       <input class="form-control" required id="start_time_picker" value="{{start_time}}" name="start_time_picker" size="20" type="text" >
       <span class="input-group-addon">
@@ -252,33 +417,112 @@ $(document).ready(function(){
     </div>
     <input type="hidden" id="start_time" name="start_time" value="{{start_time}}">
   </div>
+
+</div> <!-- Widgets to select an exact entry time (END) -->
+
+
+<div id="TIME_INTERVAL" > <!-- Widgets to select a time interval for release -->
+
   <div class="form-group">
-    <label class="control-label">Duration</label>
-     <input class="form-control" required id="duration" value="{{duration}}" name="duration" size="20" type="text" >
-    <input type="hidden" id="end_time" name="end_time" value="{{date_max}}">
+    <label class="control-label">START. Please, enter the earliest time when the body may have entered the water.</label>
+    <div class='input-group date' id='datetimepicker3'>
+      <input class="form-control" required id="start_time_picker2" value="{{start_time}}" name="start_time_picker2" size="20" type="text" >
+      <span class="input-group-addon">
+      <span class="glyphicon glyphicon-calendar" id="switchcalendar2"></span>
+      </span>
+    </div>
+    <div class='input-group date hidden' id='datetimepicker4'>
+        <div class='date' id='datetimepicker5'>
+        </div>
+          <span class="input-group-addon">
+            <span class="glyphicon glyphicon-pencil" id="cancelcalendar2"></span>
+          </span>
+    </div>
+    <input type="hidden" id="start_time2" name="start_time2" value="{{start_time}}">
   </div>
-     <div class="form-group">
-       <label class="control-label">Radius <span id="radius_label"></span> metres </label>
-       <input class="form-control" id="radius" name="radius" data-slider-id='radius' data-slider-tooltip="hide" type="text" data-slider-min="5" data-slider-max="1000" data-slider-step="5" data-slider-value="{{radius}}"/>
-     </div>
+
+
   <div class="form-group">
-    <label class="control-label">Start (UTC)</label>
-     <span id="start_time_label"></span>
-    <br>
-    <label class="control-label">End (UTC)</label>
-     <span id="end_time_label"></span>
+    <label class="control-label" >END. Please, enter the latest time when the body may have entered the water.</label>
+    <div class='input-group date' id='datetimepicker6'>
+      <input class="form-control" required id="start_time_picker3" value="{{start_time}}" name="start_time_picker3" size="20" type="text" >
+      <span class="input-group-addon">
+      <span class="glyphicon glyphicon-calendar" id="switchcalendar3"></span>
+      </span>
+    </div>
+    <div class='input-group date hidden' id='datetimepicker7'>
+        <div class='date' id='datetimepicker8'>
+        </div>
+          <span class="input-group-addon">
+            <span class="glyphicon glyphicon-pencil" id="cancelcalendar3"></span>
+          </span>
+    </div>
+    <input type="hidden" id="start_time3" name="start_time3" value="{{start_time}}">
   </div>
+
+</div> <!-- Widgets to select a time interval for release (END) -->
+
+
+     <hr>
+
+  <div class="form-group">
+    <label class="control-label">END OF SIMULATION. Please, enter the end time of the simulation. </label>
+    <div class='input-group date' id='datetimepicker9'>
+      <input class="form-control" required id="start_time_picker4" value="{{start_time}}" name="start_time_picker4" size="20" type="text" >
+      <span class="input-group-addon">
+      <span class="glyphicon glyphicon-calendar" id="switchcalendar4"></span>
+      </span>
+    </div>
+    <div class='input-group date hidden' id='datetimepicker10'>
+        <div class='date' id='datetimepicker11'>
+        </div>
+          <span class="input-group-addon">
+            <span class="glyphicon glyphicon-pencil" id="cancelcalendar4"></span>
+          </span>
+    </div>
+    <input type="hidden" id="start_time4" name="start_time4" value="{{start_time}}">
+  </div>
+
+
+     <hr>
+
  <div class="form-group">
-    <label class="control-label">Drifter</label>
+    <label class="control-label">OBJECT TYPE. Select the object type from the drop-down list below.</label>
     <select  class="form-control" id="object_type" name="object_type"></select>
   </div>
-     <div class="form-group">
-      <button  type="submit" class="btn btn-default">Submit</button>
+
+ <div class="form-group">
+
+      <button type="submit" class="btn btn-default">Submit</button>
+
       <a href="/" class="btn btn-default">Cancel</a>
-     </div>
-   </div>
+
+ </div>
+
+ </div>
    <div class="col-md-6">
      <div id="map"></div>
+     <!-- Release Position Warning -->
+     {% if w1 %}
+         <p id="WARNING-1" style="color: red; font-size: 16px; margin-top: 20px;">
+             Please, note that the marker on the map showing the entry site must NOT be: <br> 
+             &emsp; - On land. <br> &emsp; - Outside the domain of the Northeast Atlantic
+             model, showed by the rectangle. <br> &emsp; - East of Dover Strait and Great Britain.
+         </p>
+     {% endif %}
+
+     {% if w2 %}
+         <p id="WARNING-2" style="color: red; font-size: 16px; margin-top: 20px;">
+             Please, note that, if using the time interval release option, the END time must be after the START time.
+         </p>
+     {% endif %}
+
+     {% if w3 %}
+         <p id="WARNING-3" style="color: red; font-size: 16px; margin-top: 20px;">
+             Please, note that the END OF SIMULATION time must be after the release time.
+         </p>
+     {% endif %}
+
    </div>
   </div>
   {% if shrink_domain %}
@@ -287,6 +531,8 @@ $(document).ready(function(){
   <input type="hidden" name="southeast_lat" id="southeast_lat" value="">
   <input type="hidden" name="southeast_lon" id="southeast_lon" value="">
   {% endif %}
+
+
 </form>
 </div>
 </div>

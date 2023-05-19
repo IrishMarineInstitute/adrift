@@ -23,6 +23,8 @@ python-dateutil
 python-engineio
 python-socketio
 requests
+scipy
+shapely
 six
 urllib3
 Werkzeug

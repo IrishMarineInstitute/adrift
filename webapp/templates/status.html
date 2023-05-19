@@ -31,6 +31,11 @@ path {
 </style>
 <script>
 var get_status_update = function(){
+
+  var my_number = Number(document.getElementById('counter').innerText);
+  my_number++;
+  document.getElementById('counter').innerText = my_number.toString();
+
   $.ajax("status.json",{
      dataType: "json",
      cache: false,
@@ -47,17 +52,20 @@ var get_status_update = function(){
              $("#failed_message").show();
            }
          });
+       }else if(data.includes("are outside") || data.includes("not large enough")){
+         $("#header").text("Building project...");
+         $("#animation").show();
        }else{
          $("#header").text("Building project...");
          $("#status").text(data);
          $("#animation").show();
-         setTimeout(get_status_update,500);
        }
      }
    });
+   setTimeout(get_status_update,1000);
 }
 $(document).ready(function(){
-   setTimeout(get_status_update,500);
+   setTimeout(get_status_update,1000);
 });
 </script>
 </head>
@@ -66,6 +74,9 @@ $(document).ready(function(){
 <h1><a href="/">ADRIFT</a></h1>
 <p class="lead"><a href="http://www.marine.ie/">Marine Institute</a> predicted sea surface tracking.</p>
 <h3 id="header">Checking Project Status</h3>
+<p style="margin:0;display:inline;float:left;"> Elapsed time [s]: &emsp; </p>
+<p id="counter" style="margin:0;display:inline;float:left;"> 0 </p>
+<br>
 <div id="status"></div>
 <div id="failed_message" style="display:none">
 <p class="lead">Please review the log messages below to determine what went wrong.</p>

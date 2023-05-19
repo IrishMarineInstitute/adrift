@@ -22,7 +22,7 @@
   "neatl": {
     "id": "neatl",
     "name": "North East Atlantic",
-    "opendap_url": "http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/NEATLANTIC_NATIVE_2KM_40L_1H/AGGREGATE",
+    "opendap_url": "http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/NEATLANTIC_NATIVE_2KM_40L_1H/COMBINED_AGGREGATION",
     "wind_url": "http://thredds.marine.ie/thredds/dodsC/adrift_wind/adrift_wind_aggregate.nc",
     "leeway_drifters": ["PIW-1", "PIW-6", "LIFE-RAFT-DB-10", "PERSON-POWERED-VESSEL-1", "PERSON-POWERED-VESSEL-2", "PERSON-POWERED-VESSEL-3", "FISHING-VESSEL-1", "SAILBOAT-1", "SAILBOAT-2", "OIL-DRUM", "CONTAINER-1", "SLDMB"],
     "defaults": {

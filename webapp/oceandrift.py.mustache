@@ -2,8 +2,9 @@ from opendrift.models.oceandrift import OceanDrift
 from opendrift.readers import reader_ROMS_native
 from datetime import datetime, timedelta
 import dateutil.parser
+from opendrift.readers import reader_global_landmask
 
-print('setting up opendrift model (no wind)...')
+landmask = reader_global_landmask.Reader()
 
 filename = '{{nc_output_path}}'
 
@@ -15,24 +16,31 @@ latitude = {{latitude}}
 N = {{number_of_particles}}
 
 # Date
-start_time = datetime({{start_time_datetime}})
-end_time = datetime({{end_time_datetime}})
+itime = datetime.strptime("{{idate}}", '%Y-%m-%d %H:%M')
+etime = datetime.strptime("{{edate}}", '%Y-%m-%d %H:%M')
     
 # Radius for uniform dispersion around source [meters]
 R = {{radius}}
 
-
+# End time of simulation
+end_time = datetime.strptime("{{end_of_run}}", '%Y-%m-%d %H:%M')
     
 """ Model initialization """
-model = OceanDrift(loglevel=0)
+model = OceanDrift(loglevel=20)
 model.set_config('general:use_auto_landmask', False)
+
 """ Add readers """
 # Ocean data
-print('fetching {{opendap_url}}')
-phys = reader_ROMS_native.Reader('{{opendap_url}}')
+NEA = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/NEATLANTIC_NATIVE_2KM_40L_1H/COMBINED_AGGREGATION' )
+
+Connemara = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/CONNEMARA_250M_20L_1H/COMBINED_AGGREGATION' )
+
+Galway_Bay = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/GALWAY_BAY_NATIVE_70M_8L_1H/COMBINED_AGGREGATION' )
 
 # Adding readers
-model.add_reader([phys])
+model.add_reader([landmask, Galway_Bay, Connemara, NEA])
+
+model.set_config('general:coastline_action', 'previous')
 
 """ Seed elements """
 model.seed_elements(lon=longitude,
@@ -40,16 +48,15 @@ model.seed_elements(lon=longitude,
                 number=N,
                 radius=R,
                 radius_type="uniform",
-                time=start_time,
+                time=[itime, etime],
                 z='seafloor'
                 )
 
         
 """ Model run """
-print('starting model run')
 model.run(end_time=end_time, 
         time_step=timedelta(minutes=10), 
-        time_step_output=timedelta(minutes=10), 
+        time_step_output=timedelta(minutes=60), 
         outfile=filename,
         export_variables=["trajectory", 
                             "time", 
@@ -58,7 +65,3 @@ model.run(end_time=end_time,
                             "lon", 
                             "lat"]
         )
-
-#(times,a) = lw.get_time_array()
-#(lats,lons) = lw.get_lonlats()
-print('finished model run')

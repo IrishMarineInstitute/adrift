@@ -101,15 +101,7 @@ $(document).ready(function(){
 <div class="col-md-12">
 <form method="post" action="/project/new">
   <div class="form-group">
-    <label class="control-label">Model</label>
-    <select id="model" name="model" class="form-control">
-      {% for model in models %}
-      <option value="{{ model['id'] }}">{{ model['name'] }}</option>
-      {% endfor %}
-    </select>
-  </div>
-  <div class="form-group">
-   <button type="submit" class="btn btn-default">Start a New Project</button>
+   <button type="submit" class="btn btn-default">Start</button>
   </div>
 </form>
 </div>
