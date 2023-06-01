@@ -1,8 +1,24 @@
 from opendrift.models.oceandrift import OceanDrift
 from opendrift.readers import reader_ROMS_native
-from datetime import datetime, timedelta
-import dateutil.parser
 from opendrift.readers import reader_global_landmask
+from datetime import datetime, timedelta, timezone
+import pytz
+
+def string2utc(string):
+    ''' Convert datetime string to UTC '''
+
+    # Convert string to datetime object
+    dt = datetime.fromisoformat(string)
+
+    # Convert to datetime-aware    
+    dt = pytz.timezone("Europe/Dublin").localize(dt)
+    
+    # Convert to UTC
+    utc = dt.astimezone(timezone.utc)
+    
+    y, m, d, H, M = utc.year, utc.month, utc.day, utc.hour, utc.minute
+    
+    return datetime(y, m , d, H, M)
 
 landmask = reader_global_landmask.Reader()
 
@@ -16,14 +32,14 @@ latitude = {{latitude}}
 N = {{number_of_particles}}
 
 # Date
-itime = datetime.strptime("{{idate}}", '%Y-%m-%d %H:%M')
-etime = datetime.strptime("{{edate}}", '%Y-%m-%d %H:%M')
+itime = string2utc("{{idate}}")
+etime = string2utc("{{edate}}")
     
 # Radius for uniform dispersion around source [meters]
 R = {{radius}}
 
 # End time of simulation
-end_time = datetime.strptime("{{end_of_run}}", '%Y-%m-%d %H:%M')
+end_time = string2utc("{{end_of_run}}")
     
 """ Model initialization """
 model = OceanDrift(loglevel=20)
@@ -37,8 +53,10 @@ Connemara = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_
 
 Galway_Bay = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/GALWAY_BAY_NATIVE_70M_8L_1H/COMBINED_AGGREGATION' )
 
+Bantry_Bay = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/BANTRY_BAY_NATIVE_250M_20L_1H/COMBINED_AGGREGATION' )
+
 # Adding readers
-model.add_reader([landmask, Galway_Bay, Connemara, NEA])
+model.add_reader([landmask, Galway_Bay, Connemara, Bantry_Bay, NEA])
 
 model.set_config('general:coastline_action', 'previous')
 

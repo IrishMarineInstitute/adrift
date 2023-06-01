@@ -22,6 +22,7 @@ pystache
 python-dateutil
 python-engineio
 python-socketio
+pytz
 requests
 scipy
 shapely

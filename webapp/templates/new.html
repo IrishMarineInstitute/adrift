@@ -402,6 +402,7 @@ $(document).ready(function(){
 
   <div class="form-group">
   <label class="control-label">TIME. Please, enter the time when the body entered the water.</label>
+  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} </p>
     <div class='input-group date' id='datetimepicker0'>
       <input class="form-control" required id="start_time_picker" value="{{start_time}}" name="start_time_picker" size="20" type="text" >
       <span class="input-group-addon">
@@ -425,6 +426,7 @@ $(document).ready(function(){
 
   <div class="form-group">
     <label class="control-label">START. Please, enter the earliest time when the body may have entered the water.</label>
+  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} </p>
     <div class='input-group date' id='datetimepicker3'>
       <input class="form-control" required id="start_time_picker2" value="{{start_time}}" name="start_time_picker2" size="20" type="text" >
       <span class="input-group-addon">
@@ -444,6 +446,7 @@ $(document).ready(function(){
 
   <div class="form-group">
     <label class="control-label" >END. Please, enter the latest time when the body may have entered the water.</label>
+  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} </p>
     <div class='input-group date' id='datetimepicker6'>
       <input class="form-control" required id="start_time_picker3" value="{{start_time}}" name="start_time_picker3" size="20" type="text" >
       <span class="input-group-addon">
@@ -467,6 +470,7 @@ $(document).ready(function(){
 
   <div class="form-group">
     <label class="control-label">END OF SIMULATION. Please, enter the end time of the simulation. </label>
+  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} </p>
     <div class='input-group date' id='datetimepicker9'>
       <input class="form-control" required id="start_time_picker4" value="{{start_time}}" name="start_time_picker4" size="20" type="text" >
       <span class="input-group-addon">
