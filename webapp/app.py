@@ -11,6 +11,7 @@ import codecs
 import sys
 import os
 from processify import processify
+from cleaner import cleaner
 import subprocess
 import shutil
 from operator import itemgetter
@@ -30,7 +31,6 @@ LEEWAY_OBJECTS = []
 def _init():
   global LEEWAY_OBJECTS
   l = Leeway()
-  l.set_config('general:use_auto_landmask', False)
   LEEWAY_OBJECTS = [{
     'OBJKEY': l.leewayprop[item]['OBJKEY'],
     'Description': l.leewayprop[item]['Description'] 
@@ -40,7 +40,6 @@ def _init():
 def create_app():
   _init()
   app = Flask(__name__)
-
 
   @app.route('/')
   def index():
@@ -132,6 +131,7 @@ def create_app():
 
   @app.route('/project/<path:project>/')
   def show_status(project):
+      cleaner()
       return render_template('status.html')
 
   def list_leeway_objects():
@@ -154,9 +154,28 @@ def create_app():
        items.append(v)
     return jsonify(items)
 
+
+  def fix_adrift_times(times):
+    ''' This function makes sure that the times (expressed as Dublin time), go
+    from 12:00 AM to 12:00 AM, since this makes it easier to use the calendar
+    forms. Also, it gets rid of the earliest part of the time record, to prevent
+    users from requesting too long simulations, which causes storage issues in the
+    Docker container. '''
+    
+    ndays = 21 # Maximum number of days allowed in the calendar
+    
+    # Times in the ROMS model are in UTC. Find latest time step with 23:00 UTC.
+    for i, time in enumerate(reversed(times)):
+        if time.hour == 23: break
+    # Number of time steps in the returned time list
+    nsteps = ndays * 24 + 1
+    # Subset time and return
+    return times[-i-nsteps:-i]
+
   def _get_times(cdf,var_time):
     units = cdf.variables[var_time].units
     times = [netCDF4.num2date(t,units) for t in cdf.variables[var_time]]
+    times = fix_adrift_times(times)
     return ["{0}Z".format(t).replace(" ","T") for t in times]
 
   def _range(model):
@@ -308,7 +327,6 @@ def create_app():
       with netCDF4.Dataset('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/NEATLANTIC_NATIVE_2KM_40L_1H/COMBINED_AGGREGATION') as nc:
           lon_rho = nc.variables['lon_rho'][:]
           lat_rho = nc.variables['lat_rho'][:]
-          mask    = nc.variables['mask_rho'][:].flatten().data
 
       w1 = False
 
@@ -326,21 +344,13 @@ def create_app():
           w1 = True # Point is not inside NEA domain
 
       if not w1:
-          f.write('Testing marker is west of Dover Strait...\n')
-          if longitude > 1.5:
-              f.write('Warning! Marker is east of Dover Strait!\n')
-              w1 = True # Point is east of Dover Strait
-
-      if not w1:
-          f.write('Testing marker is not on land...\n')
-          lon, lat = lon_rho.flatten(), lat_rho.flatten()
-          points = np.vstack((lon, lat)).T
-          points = points.data
-          interpolator = NearestNDInterpolator(points, mask)
-          mask_value = interpolator(longitude, latitude)
-          if not mask_value:
-              f.write('Warning! Test is on land!\n')
-              w1 = True # Point is on land
+          f.write('Testing marker is west of Great Britain...\n')
+          if ( latitude > 50.9 )  and (longitude > -2.5 ):
+              f.write('Warning! Marker is east of Great Britain!\n')
+              w1 = True # Point is east of Great Britain
+          if ( latitude > 55.9 )  and (longitude > -4.1 ):
+              f.write('Warning! Marker is east of Great Britain!\n')
+              w1 = True # Point is east of Great Britain
 
       idate = datetime.datetime.strptime(idate, '%Y-%m-%d %H:%M')
       edate = datetime.datetime.strptime(edate, '%Y-%m-%d %H:%M')
@@ -638,19 +648,23 @@ def create_app():
     with open(times_output_path,'w') as f:
         json.dump(times,f)
 
+    ''' 
     overwrite_json_file(status_output_path,"writing geo.json")
     with open(geojson_output_path,'w') as myfile:
       json.dump(points,myfile)
+    ''' 
 
     overwrite_json_file(status_output_path,"writing timepoints.json")
     with open(json_output_path,'w') as myfile:
       json.dump(points2,myfile)
 
+    '''
     overwrite_json_file(status_output_path,"writing projection.js")
     with open(js_output_path,'w') as f:
       f.write("projection=");
       json.dump(points,f)
       f.write(";\n");
+    '''
 
     overwrite_json_file(status_output_path,"Finished")
 
@@ -695,4 +709,4 @@ def create_app():
 
 if __name__ == '__main__':
   app = create_app()
-  app.run(host='0.0.0.0')
+  app.run(debug=False, host='0.0.0.0')

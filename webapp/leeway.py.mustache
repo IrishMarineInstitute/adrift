@@ -1,9 +1,11 @@
 from opendrift.models.leeway import Leeway
+from opendrift.readers import reader_global_landmask
 from opendrift.readers import reader_netCDF_CF_generic
 from opendrift.readers import reader_ROMS_native
-from opendrift.readers import reader_global_landmask
 from datetime import datetime, timedelta, timezone
 import pytz
+
+landmask = reader_global_landmask.Reader()
 
 def string2utc(string):
     ''' Convert datetime string to UTC '''
@@ -20,9 +22,6 @@ def string2utc(string):
     y, m, d, H, M = utc.year, utc.month, utc.day, utc.hour, utc.minute
     
     return datetime(y, m , d, H, M)
-
-
-landmask = reader_global_landmask.Reader()
 
 filename = '{{nc_output_path}}'
 
@@ -44,8 +43,7 @@ R = {{radius}}
 end_time = string2utc("{{end_of_run}}")
     
 """ Model initialization """
-model = Leeway(loglevel=20)
-model.set_config('general:use_auto_landmask', False)
+model = Leeway(loglevel=20); model.set_config('general:use_auto_landmask', False)
 
 """ Add readers """
 # Ocean data
@@ -60,7 +58,7 @@ Bantry_Bay = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI
 wind = reader_netCDF_CF_generic.Reader('http://milas.marine.ie/thredds/dodsC/adrift_wind/adrift_wind_aggregate.nc')
 
 # Adding readers
-model.add_reader([landmask, wind, Galway_Bay, Connemara, Bantry_Bay, NEA])
+model.add_reader([wind, Galway_Bay, Connemara, Bantry_Bay, landmask, NEA])
 
 object_type = {{object_type}} # {{object_type_key}} {{object_type_description}}
 
@@ -79,8 +77,8 @@ model.seed_elements(lon=longitude,
         
 """ Model run """
 model.run(end_time=end_time, 
-        time_step=timedelta(minutes=10), 
-        time_step_output=timedelta(minutes=60), 
+        time_step=timedelta(minutes=5), 
+        time_step_output=timedelta(minutes=15), 
         outfile=filename,
         export_variables=["trajectory", 
                             "time", 

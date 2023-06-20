@@ -20,7 +20,7 @@ RUN useradd -ms /bin/bash uwsgi
 RUN mkdir /output && mkdir /input
 
 COPY webapp /webapp
-
+RUN python3 /webapp/get_rid_of_spatial_coverage_error.py
 RUN chown -R uwsgi:uwsgi /output /input /webapp
 
 USER uwsgi

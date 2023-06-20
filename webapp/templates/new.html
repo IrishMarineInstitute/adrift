@@ -384,10 +384,12 @@ $(document).ready(function(){
      </div>
 
      <hr>
+
+     
      	 <!-- TYPE OF RELEASE (EITHER EXACT TIME OR TIME INTERVAL) -->
      	 <div class="form-group">
 		  
-		 <label class="control-label">ENTRY TIME. Please, enter the time when the body entered the water. If the entry time is known with high accuracy, select the "Exact time" option. Otherwise, select the "Time interval" option.  </label>
+		 <label class="control-label">ENTRY TIME. Please, enter the time when the body entered the water. If the entry time is known with high accuracy, select the "Exact time" option. Otherwise, select the "Time interval" option. <span style="background-color: #FFFF00"> Notice that all the times to be selected in the calendar forms below are in Dublin time. Mind the offset with your local time, if any. </span> </label>
                       
 		 <label>                    <input type="radio" id="timeInterval" name="timetype" value="Time interval" onchange="timeEntryMode(this);" checked>
 			 <i>Time interval</i></label>
@@ -402,7 +404,7 @@ $(document).ready(function(){
 
   <div class="form-group">
   <label class="control-label">TIME. Please, enter the time when the body entered the water.</label>
-  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} </p>
+  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} (UTC) </p>
     <div class='input-group date' id='datetimepicker0'>
       <input class="form-control" required id="start_time_picker" value="{{start_time}}" name="start_time_picker" size="20" type="text" >
       <span class="input-group-addon">
@@ -426,7 +428,7 @@ $(document).ready(function(){
 
   <div class="form-group">
     <label class="control-label">START. Please, enter the earliest time when the body may have entered the water.</label>
-  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} </p>
+  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} (UTC)</p>
     <div class='input-group date' id='datetimepicker3'>
       <input class="form-control" required id="start_time_picker2" value="{{start_time}}" name="start_time_picker2" size="20" type="text" >
       <span class="input-group-addon">
@@ -446,7 +448,7 @@ $(document).ready(function(){
 
   <div class="form-group">
     <label class="control-label" >END. Please, enter the latest time when the body may have entered the water.</label>
-  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} </p>
+  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} (UTC)</p>
     <div class='input-group date' id='datetimepicker6'>
       <input class="form-control" required id="start_time_picker3" value="{{start_time}}" name="start_time_picker3" size="20" type="text" >
       <span class="input-group-addon">
@@ -470,7 +472,7 @@ $(document).ready(function(){
 
   <div class="form-group">
     <label class="control-label">END OF SIMULATION. Please, enter the end time of the simulation. </label>
-  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} </p>
+  <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} (UTC)</p>
     <div class='input-group date' id='datetimepicker9'>
       <input class="form-control" required id="start_time_picker4" value="{{start_time}}" name="start_time_picker4" size="20" type="text" >
       <span class="input-group-addon">
@@ -510,8 +512,8 @@ $(document).ready(function(){
      {% if w1 %}
          <p id="WARNING-1" style="color: red; font-size: 16px; margin-top: 20px;">
              Please, note that the marker on the map showing the entry site must NOT be: <br> 
-             &emsp; - On land. <br> &emsp; - Outside the domain of the Northeast Atlantic
-             model, showed by the rectangle. <br> &emsp; - East of Dover Strait and Great Britain.
+             &emsp; <br> &emsp; - Outside the domain of the Northeast Atlantic
+             model, showed by the rectangle. <br> &emsp; - East of Great Britain.
          </p>
      {% endif %}
 

@@ -24,12 +24,12 @@ var refresh_status = function(project_path,elid){
    });
 };
 $(document).ready(function(){
-  $.ajax({url: "/api/projects", cache: false}).success(function(projects){
+  $.ajax({url: "/api/projects", cache: false}).done(function(projects){
       if(projects.length == 0){
         $("#projects").html("<p class='lead'>No projects.</p>");
         return;
       }
-      var $table = $("<table class='table'><th>Project</th><th>Created</th><th>Status</th><th>Model</th><th>Start Location</th><th>Start Time</th><th>Actions</th></table>");
+      var $table = $("<table class='table'><th>Project</th><th>Created</th><th>Status</th><th>Start Location</th><th>Actions</th></table>");
       for(var i=0;i<projects.length;i++){
          var project = projects[i];
          var $row = $("<tr></tr>");
@@ -57,13 +57,7 @@ $(document).ready(function(){
          $td.attr("id",statuselid); 
          $row.append($td);
          $td = $("<td></td>");
-         $td.text(project.model);
-         $row.append($td);
-         $td = $("<td></td>");
          $td.text(""+project.latitude+","+project.longitude);
-         $row.append($td);
-         $td = $("<td></td>");
-         $td.text(project.start_time.replace("+00:00",""));
          $row.append($td);
          $td = $("<td></td>");
          var trash = $('<span class="glyphicon glyphicon-trash" aria-hidden="true"></span>');

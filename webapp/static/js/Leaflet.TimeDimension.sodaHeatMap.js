@@ -53,7 +53,11 @@ L.TimeDimension.Layer.SODAHeatMap = L.TimeDimension.Layer.extend({
         this._baseLayer.setData(this._currentTimeData);
         var date = new Date(this._currentLoadedTime);
         $("#utctime").text(date.toISOString());
-        $("#localtime").text(date.toString());
+        var localtime = date.toString();
+        $("#localtime").text(localtime.replace("GMT+0100", ""));
+        date.setHours(date.getHours() + 1);
+	var cettime = date.toString();
+        $("#cettime").text(cettime.replace("GMT+0100 (Irish Standard Time)", "(Central European Time)"));
         var bounds = this.map.getBounds();
         bounds.extend(L.latLngBounds(this._currentTimeData.data));
         this.map.fitBounds(bounds);

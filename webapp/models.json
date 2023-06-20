@@ -1,24 +1,4 @@
 {
-  "connemara_his": {
-    "id": "connemara_his",
-    "name": "Connemara",
-    "opendap_url": "http://thredds.marine.ie/thredds/dodsC/connemara_native/connemara_native_aggregate.nc",
-    "wind_url": "http://thredds.marine.ie/thredds/dodsC/adrift_wind/adrift_wind_aggregate.nc",
-    "defaults": {
-      "latitude": 53.256302,
-      "longitude": -9.005189,
-      "northwest_lat": 52,
-      "northwest_lon": -10,
-      "southeast_lat": 50,
-      "southeast_lon": -8
-    },
-    "leeway_drifters": ["PIW-1", "PIW-6", "LIFE-RAFT-DB-10", "PERSON-POWERED-VESSEL-1", "PERSON-POWERED-VESSEL-2", "PERSON-POWERED-VESSEL-3", "FISHING-VESSEL-1", "SAILBOAT-1", "SAILBOAT-2", "OIL-DRUM", "CONTAINER-1", "SLDMB"],
-    "variables": {
-      "latitude": "lat_u",
-      "longitude": "lon_u",
-      "time": "ocean_time"
-    }
-  },
   "neatl": {
     "id": "neatl",
     "name": "North East Atlantic",
