@@ -98,6 +98,10 @@ def create_app():
       latitude = info["defaults"]["latitude"]
       longitude = info["defaults"]["longitude"]
       start_time = time_min
+      end_time_in_dropdown_list = time_max
+      now = datetime.datetime.now();
+      today = datetime.datetime(now.year, now.month, now.day) - datetime.timedelta(hours=1)
+      today = "{0}Z".format(today).replace(" ", "T")
       radius = 250
       duration = "12 hours"
       if context != None:
@@ -125,6 +129,8 @@ def create_app():
                duration = duration,
                radius = radius,
                start_time = start_time,
+               end_time = end_time_in_dropdown_list,
+               today = today,
                longitude=-9,
                w1=w1, w2=w2, w3=w3,
                polygon=json.dumps([list(p) for p in polygon]))
@@ -422,6 +428,10 @@ def create_app():
         latitude = info["defaults"]["latitude"]
         longitude = info["defaults"]["longitude"]
         start_time = time_min
+        end_time_in_dropdown_list = time_max
+        now = datetime.datetime.now(); 
+        today = datetime.datetime(now.year, now.month, now.day) - datetime.timedelta(hours=1)
+        today = "{0}Z".format(today).replace(" ", "T")
         radius = 250
         duration = "12 hours"
         if context != None:
@@ -449,6 +459,8 @@ def create_app():
                duration = duration,
                radius = radius,
                start_time = start_time,
+               end_time = end_time_in_dropdown_list,
+               today = today,
                longitude=-9,
                w1=w1, w2=w2, w3=w3,
                polygon=json.dumps([list(p) for p in polygon]))

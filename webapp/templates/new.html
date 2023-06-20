@@ -225,10 +225,10 @@ var list_object_types = function(){
 
 
 $(document).ready(function(){
-  $("#start_time_picker").val(moment('{{start_time}}').format(picker_date_format));
-  $("#start_time_picker2").val(moment('{{start_time}}').format(picker_date_format));
-  $("#start_time_picker3").val(moment('{{start_time}}').format(picker_date_format));
-  $("#start_time_picker4").val(moment('{{start_time}}').format(picker_date_format));
+  $("#start_time_picker").val(moment('{{today}}').format(picker_date_format));
+  $("#start_time_picker2").val(moment('{{today}}').format(picker_date_format));
+  $("#start_time_picker3").val(moment('{{today}}').format(picker_date_format));
+  $("#start_time_picker4").val(moment('{{end_time}}').format(picker_date_format));
    $("#radius").slider({
 	formatter: function(value) {
           $("#radius_label").text(value);
@@ -406,7 +406,7 @@ $(document).ready(function(){
   <label class="control-label">TIME. Please, enter the time when the body entered the water.</label>
   <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} (UTC) </p>
     <div class='input-group date' id='datetimepicker0'>
-      <input class="form-control" required id="start_time_picker" value="{{start_time}}" name="start_time_picker" size="20" type="text" >
+      <input class="form-control" required id="start_time_picker" value="{{today}}" name="start_time_picker" size="20" type="text" >
       <span class="input-group-addon">
       <span class="glyphicon glyphicon-calendar" id="switchcalendar"></span>
       </span>
@@ -418,7 +418,7 @@ $(document).ready(function(){
             <span class="glyphicon glyphicon-pencil" id="cancelcalendar"></span>
           </span>
     </div>
-    <input type="hidden" id="start_time" name="start_time" value="{{start_time}}">
+    <input type="hidden" id="start_time" name="start_time" value="{{today}}">
   </div>
 
 </div> <!-- Widgets to select an exact entry time (END) -->
@@ -430,7 +430,7 @@ $(document).ready(function(){
     <label class="control-label">START. Please, enter the earliest time when the body may have entered the water.</label>
   <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} (UTC)</p>
     <div class='input-group date' id='datetimepicker3'>
-      <input class="form-control" required id="start_time_picker2" value="{{start_time}}" name="start_time_picker2" size="20" type="text" >
+      <input class="form-control" required id="start_time_picker2" value="{{today}}" name="start_time_picker2" size="20" type="text" >
       <span class="input-group-addon">
       <span class="glyphicon glyphicon-calendar" id="switchcalendar2"></span>
       </span>
@@ -442,7 +442,7 @@ $(document).ready(function(){
             <span class="glyphicon glyphicon-pencil" id="cancelcalendar2"></span>
           </span>
     </div>
-    <input type="hidden" id="start_time2" name="start_time2" value="{{start_time}}">
+    <input type="hidden" id="start_time2" name="start_time2" value="{{today}}">
   </div>
 
 
@@ -450,7 +450,7 @@ $(document).ready(function(){
     <label class="control-label" >END. Please, enter the latest time when the body may have entered the water.</label>
   <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} (UTC)</p>
     <div class='input-group date' id='datetimepicker6'>
-      <input class="form-control" required id="start_time_picker3" value="{{start_time}}" name="start_time_picker3" size="20" type="text" >
+      <input class="form-control" required id="start_time_picker3" value="{{today}}" name="start_time_picker3" size="20" type="text" >
       <span class="input-group-addon">
       <span class="glyphicon glyphicon-calendar" id="switchcalendar3"></span>
       </span>
@@ -462,7 +462,7 @@ $(document).ready(function(){
             <span class="glyphicon glyphicon-pencil" id="cancelcalendar3"></span>
           </span>
     </div>
-    <input type="hidden" id="start_time3" name="start_time3" value="{{start_time}}">
+    <input type="hidden" id="start_time3" name="start_time3" value="{{today}}">
   </div>
 
 </div> <!-- Widgets to select a time interval for release (END) -->
@@ -474,7 +474,7 @@ $(document).ready(function(){
     <label class="control-label">END OF SIMULATION. Please, enter the end time of the simulation. </label>
   <p style="font-style:italic;color:grey;"> Available: from {{date_min}} to {{date_max}} (UTC)</p>
     <div class='input-group date' id='datetimepicker9'>
-      <input class="form-control" required id="start_time_picker4" value="{{start_time}}" name="start_time_picker4" size="20" type="text" >
+      <input class="form-control" required id="start_time_picker4" value="{{end_time}}" name="start_time_picker4" size="20" type="text" >
       <span class="input-group-addon">
       <span class="glyphicon glyphicon-calendar" id="switchcalendar4"></span>
       </span>
@@ -486,7 +486,7 @@ $(document).ready(function(){
             <span class="glyphicon glyphicon-pencil" id="cancelcalendar4"></span>
           </span>
     </div>
-    <input type="hidden" id="start_time4" name="start_time4" value="{{start_time}}">
+    <input type="hidden" id="start_time4" name="start_time4" value="{{end_time}}">
   </div>
 
 
