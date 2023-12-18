@@ -2,12 +2,6 @@ FROM opendrift/opendrift
 
 MAINTAINER fullergalway@gmail.com
 
-RUN apt-get update && \
-     apt-get install -y python3-netcdf4 \
-                        libssl-dev \
-                        libffi-dev
-
-#RUN apt-get install -y build-essential
 RUN conda install -c conda-forge uwsgi
 
 COPY requirements.txt requirements.txt
@@ -20,8 +14,9 @@ RUN useradd -ms /bin/bash uwsgi
 RUN mkdir /output && mkdir /input
 
 COPY webapp /webapp
-RUN python3 /webapp/get_rid_of_spatial_coverage_error.py
 RUN chown -R uwsgi:uwsgi /output /input /webapp
+
+COPY __init__.py /code/opendrift/models/basemodel/
 
 USER uwsgi
 WORKDIR /webapp
