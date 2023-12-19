@@ -1,6 +1,6 @@
 FROM opendrift/opendrift
 
-MAINTAINER fullergalway@gmail.com
+MAINTAINER diego.pereiro@marine.ie
 
 RUN conda install -c conda-forge uwsgi
 
