@@ -5,6 +5,8 @@ from opendrift.readers import reader_ROMS_native
 from datetime import datetime, timedelta, timezone
 import pytz
 
+import logging
+
 landmask = reader_global_landmask.Reader()
 
 def string2utc(string):
@@ -51,10 +53,13 @@ model = Leeway(loglevel=20); model.set_config('general:use_auto_landmask', False
 # IMPROVE PERFORMANCE, BY ADDING ONLY THOSE READERS (MODELS) THAT ARE
 # LIKELY TO BE NEEDED IN THE SIMULATION.
 
+logger = logging.getLogger("opendrift")
+
 # ECMWF wind is always used in Leeway model
 url = 'http://milas.marine.ie/thredds/dodsC/adrift_wind/adrift_wind_aggregate.nc'
 rdr = reader_netCDF_CF_generic.Reader(url)
 model.add_reader(rdr)
+logger.info("\n\n *** ECMWF Added ***\n\n")
 del url, rdr
 
 # Connemara bounding box (with a 0.25-degree padding around model boundaries)
@@ -68,12 +73,14 @@ if (longitude > lon_min and longitude < lon_max and latitude > lat_min and latit
     url = 'http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/GALWAY_BAY_NATIVE_70M_8L_1H/COMBINED_AGGREGATION'
     rdr = reader_ROMS_native.Reader(url)
     model.add_reader(rdr)
+    logger.info("\n\n *** GALWAY BAY Added ***\n\n")
     del url, rdr
     
     # Include Connemara
     url = 'http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/CONNEMARA_250M_20L_1H/COMBINED_AGGREGATION'
     rdr = reader_ROMS_native.Reader(url)
     model.add_reader(rdr)
+    logger.info("\n\n *** CONNEMARA Added ***\n\n")
     del url, rdr
 
 # Dublin bounding box (with a 0.25-degree padding around model boundaries)
@@ -87,6 +94,7 @@ if (longitude > lon_min and longitude < lon_max and latitude > lat_min and latit
     url = 'http://milas.marine.ie/thredds/dodsC/OPENDRIFT-AGGREGATE'
     rdr = reader_ROMS_native.Reader(url)
     model.add_reader(rdr)
+    logger.info("\n\n *** DUBLIN BAY Added ***\n\n")
     del url, rdr
 
 # Bantry bounding box (with a 0.25-degree padding around model corners)
@@ -100,14 +108,17 @@ if (longitude > lon_min and longitude < lon_max and latitude > lat_min and latit
     url = 'http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/BANTRY_BAY_NATIVE_250M_20L_1H/COMBINED_AGGREGATION'
     rdr = reader_ROMS_native.Reader(url)
     model.add_reader(rdr)
+    logger.info("\n\n *** BANTRY BAY Added ***\n\n")
     del url, rdr
 
 model.add_reader(landmask)
+logger.info("\n\n *** GLOBAL LANDMASK Added ***\n\n")
 
 # Finally, add Ne-Atl
 url = 'http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/NEATLANTIC_NATIVE_2KM_40L_1H/COMBINED_AGGREGATION'
 rdr = reader_ROMS_native.Reader(url)
 model.add_reader(rdr)
+logger.info("\n\n *** NORTHEAST ATLANTIC Added ***\n\n")
 del url, rdr
 #######################################################################
 
