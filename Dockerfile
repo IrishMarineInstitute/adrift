@@ -1,8 +1,8 @@
-FROM opendrift/opendrift
+FROM python:3.11-slim
 
-MAINTAINER diego.pereiro@marine.ie
+RUN apt-get update && apt-get install -y build-essential python3-dev gcc
 
-RUN conda install -c conda-forge uwsgi
+RUN pip install opendrift uwsgi
 
 COPY requirements.txt requirements.txt
 

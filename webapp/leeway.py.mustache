@@ -46,19 +46,70 @@ end_time = string2utc("{{end_of_run}}")
 model = Leeway(loglevel=20); model.set_config('general:use_auto_landmask', False)
 
 """ Add readers """
-# Ocean data
-NEA = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/NEATLANTIC_NATIVE_2KM_40L_1H/COMBINED_AGGREGATION' )
+#######################################################################
+# THIS PART IS MODIFIED IN MARCH 2026 TO INCLUDE DUBLIN BAY AND TO 
+# IMPROVE PERFORMANCE, BY ADDING ONLY THOSE READERS (MODELS) THAT ARE
+# LIKELY TO BE NEEDED IN THE SIMULATION.
 
-Connemara = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/CONNEMARA_250M_20L_1H/COMBINED_AGGREGATION' )
+# ECMWF wind is always used in Leeway model
+url = 'http://milas.marine.ie/thredds/dodsC/adrift_wind/adrift_wind_aggregate.nc'
+rdr = reader_netCDF_CF_generic.Reader(url)
+model.add_reader(rdr)
+del url, rdr
 
-Galway_Bay = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/GALWAY_BAY_NATIVE_70M_8L_1H/COMBINED_AGGREGATION' )
+# Connemara bounding box (with a 0.25-degree padding around model boundaries)
+lon_min = -11.0485
+lon_max = -8.6465
+lat_min = 52.7009
+lat_max = 53.9791
 
-Bantry_Bay = reader_ROMS_native.Reader('http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/BANTRY_BAY_NATIVE_250M_20L_1H/COMBINED_AGGREGATION' )
+if (longitude > lon_min and longitude < lon_max and latitude > lat_min and latitude < lat_max):
+    # Include Galway Bay
+    url = 'http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/GALWAY_BAY_NATIVE_70M_8L_1H/COMBINED_AGGREGATION'
+    rdr = reader_ROMS_native.Reader(url)
+    model.add_reader(rdr)
+    del url, rdr
+    
+    # Include Connemara
+    url = 'http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/CONNEMARA_250M_20L_1H/COMBINED_AGGREGATION'
+    rdr = reader_ROMS_native.Reader(url)
+    model.add_reader(rdr)
+    del url, rdr
 
-wind = reader_netCDF_CF_generic.Reader('http://milas.marine.ie/thredds/dodsC/adrift_wind/adrift_wind_aggregate.nc')
+# Dublin bounding box (with a 0.25-degree padding around model boundaries)
+lon_min = -6.4984
+lon_max = -5.6986
+lat_min = 52.9827
+lat_max = 53.6382
 
-# Adding readers
-model.add_reader([wind, Galway_Bay, Connemara, Bantry_Bay, landmask, NEA])
+if (longitude > lon_min and longitude < lon_max and latitude > lat_min and latitude < lat_max):
+    # Include Dublin Bay
+    url = 'http://milas.marine.ie/thredds/dodsC/OPENDRIFT-AGGREGATE'
+    rdr = reader_ROMS_native.Reader(url)
+    model.add_reader(rdr)
+    del url, rdr
+
+# Bantry bounding box (with a 0.25-degree padding around model corners)
+lon_min = -11.2398
+lon_max = -8.3816
+lat_min = 50.2933
+lat_max = 52.2642
+
+if (longitude > lon_min and longitude < lon_max and latitude > lat_min and latitude < lat_max):
+    # Include Bantry Bay
+    url = 'http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/BANTRY_BAY_NATIVE_250M_20L_1H/COMBINED_AGGREGATION'
+    rdr = reader_ROMS_native.Reader(url)
+    model.add_reader(rdr)
+    del url, rdr
+
+model.add_reader(landmask)
+
+# Finally, add Ne-Atl
+url = 'http://milas.marine.ie/thredds/dodsC/IMI_ROMS_HYDRO/NEATLANTIC_NATIVE_2KM_40L_1H/COMBINED_AGGREGATION'
+rdr = reader_ROMS_native.Reader(url)
+model.add_reader(rdr)
+del url, rdr
+#######################################################################
 
 object_type = {{object_type}} # {{object_type_key}} {{object_type_description}}
 

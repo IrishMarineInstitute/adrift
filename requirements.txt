@@ -15,6 +15,7 @@ ndg-httpsclient
 netCDF4
 numpy
 ply
+psutil
 pyasn1
 pycparser
 pyOpenSSL
